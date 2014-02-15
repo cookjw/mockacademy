@@ -1,5 +1,9 @@
 #Tic-Tac-Toe for two players
 
+#Remaining issues:
+#    allows players to pass by entering coordinates of own square
+
+
 board = {(0,0) : "_", (1,0) : "_", (2,0) : "_", (0,1) : "_", (1,1) : "_", (2,1) : "_", (0,2) : "_", (1,2) : "_", (2,2) : "_",}
 
 def horizontalright(square):
