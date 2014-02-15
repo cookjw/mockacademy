@@ -25,8 +25,8 @@ def threeinarow(square):
     elif square == (1,1) and((board[square] == board[diagonalright(square)] == board[diagonalright(diagonalright(square))] == "X") or \
     (board[square] == board[diagonalright(square)] == board[diagonalright(diagonalright(square))] == "O")):
         return True
-    elif square == (1,1) and ((board[square] == board[diagonalleft(square)] == board[diagonalleft(diagonalright(square))] == "X") or \
-    (board[square] == board[diagonalleft(square)] == board[diagonalleft(diagonalright(square))] == "O")):
+    elif square == (1,1) and ((board[square] == board[diagonalleft(square)] == board[diagonalleft(diagonalleft(square))] == "X") or \
+    (board[square] == board[diagonalleft(square)] == board[diagonalleft(diagonalleft(square))] == "O")):
         return True
     else:
         return False
@@ -46,15 +46,24 @@ def printboard():
     print board[(0,2)] + " " + board[(1,2)] + " " + board[(2,2)]
     print board[(0,1)] + " " + board[(1,1)] + " " + board[(2,1)]
     print board[(0,0)] + " " + board[(1,0)] + " " + board[(2,0)]
-    
+
+
+ 
 while not end_condition():
     printboard()
     
     
     player1horiz = int(raw_input("Player 1 (X) enter horizontal coordinate(1, 2, or 3)\n")) - 1
-    player1vert = int(raw_input("Player 1 (X) enter vertical coordinate(1, 2, or 3)\n")) - 1
-    player1square = (player1horiz, player1vert)     
-    board[player1square] = "X"
+    player1vert = int(raw_input("Player 1 (X) enter vertical coordinate(1, 2, or 3)\n")) - 1    
+    player1square = (player1horiz, player1vert)
+    while board[player1square] != "X": 
+        if board[player1square] == "_":             
+            board[player1square] = "X"
+        else:
+            print "Sorry, square already occupied."
+            player1horiz = int(raw_input("Player 1 (X) enter horizontal coordinate(1, 2, or 3)\n")) - 1
+            player1vert = int(raw_input("Player 1 (X) enter vertical coordinate(1, 2, or 3)\n")) - 1    
+            player1square = (player1horiz, player1vert)
     
     printboard()
     
@@ -63,11 +72,17 @@ while not end_condition():
     
     player2horiz = int(raw_input("Player 2 (O) enter horizontal coordinate(1, 2, or 3)\n")) - 1
     player2vert = int(raw_input("Player 2 (O) enter vertical coordinate(1, 2, or 3)\n")) - 1
-    player2square = (player2horiz, player2vert)           
-    board[player2square] = "O"    
-    
+    player2square = (player2horiz, player2vert) 
+    while board[player2square] != "O":    
+        if board[player2square] == "_":    
+            board[player2square] = "O"  
+        else:
+            print "Sorry, square already occupied."    
+            player2horiz = int(raw_input("Player 2 (O) enter horizontal coordinate(1, 2, or 3)\n")) - 1
+            player2vert = int(raw_input("Player 2 (O) enter vertical coordinate(1, 2, or 3)\n")) - 1
+            player2square = (player2horiz, player2vert) 
 
-
+printboard()
 print "Game Over!"
 
 
