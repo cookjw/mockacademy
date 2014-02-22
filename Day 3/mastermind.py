@@ -35,7 +35,7 @@ def bulls_and_cows():
     bullnumber = len(bulls)
     cownumber = len(cows)
     print "bulls: " + str(bullnumber)
-    print "cows: " + str(cownumber)#
+    print "cows: " + str(cownumber)
     guesscount += 1
 
 number_of_guesses = int(raw_input("Enter the number of guesses the codebreaker shall have. \n"))    
@@ -45,7 +45,7 @@ choices = int(raw_input("Choose choices (at least the number of digits) \n"))
 secret = choosenumber(digits, choices)
 guesscount = 0
 guess = []
-while guess != secret and guesscount <= number_of_guesses:
+while guess != secret and guesscount < number_of_guesses:
     bulls_and_cows()
     
 if guess == secret:
