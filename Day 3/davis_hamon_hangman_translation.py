@@ -147,7 +147,7 @@ class ComputerCondemned:
         letter_frequencies = collections.defaultdict(int)
         for chr in all_letters:
             letter_frequencies[chr] += 1
-        next_guess = sorted(letter_frequencies, key=letter_frequencies.get)[-1]
+        next_guess = sorted(letter_frequencies, key=letter_frequencies.get())[-1]
         self.previous_guesses.append(next_guess)
         return next_guess
      
