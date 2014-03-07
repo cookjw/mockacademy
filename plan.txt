@@ -13,7 +13,7 @@ Day 2:
 Day 3:
 - Hangman
 - Mastermind
-- A* search
+- A* search (did Dikjstra's algorithm, a special case)
 - dictionaries with lists as keys (not possible, because lists mutable)
 
 
