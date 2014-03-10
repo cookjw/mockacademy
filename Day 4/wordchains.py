@@ -38,11 +38,19 @@ def wordchain(origin_word, target_word):
                 
         
 
-print wordchain("duck", "fund")
+# print wordchain("duck", "fund")
+
+# print " "
+        
+# print wordchain("bury", "fund")
+
+origin_word = raw_input("Enter starting word: \n")
+target_word = raw_input("Enter target word: \n")
 
 print " "
-        
-print wordchain("bury", "fund")
+
+print origin_word
+print wordchain(origin_word, target_word)
 
 
 
