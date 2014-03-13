@@ -17,9 +17,8 @@ def adjacent(word1, word2):
             
             
 class WordChains:
-
-    def __init__(self):    
-        self.dictionary = [word[:-1] for word in open("..\Day 3\dictionary.txt").readlines()]
+       
+    dictionary = [word[:-1] for word in open("..\Day 3\dictionary.txt").readlines()]
     
     def adjacent_words(self, word):
         return [other_word for other_word in self.dictionary if adjacent(other_word, word)]
