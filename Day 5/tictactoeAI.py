@@ -1,6 +1,18 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Unfinished (displays board).
+# CURRENT STATUS: Unfinished (displays board and tests end conditions).
+
+
+
+
+
+def next(coordinates, direction):
+    if direction == "horizontal":
+        return (coordinates[0], coordinates[1]+1)
+    if direction == "vertical":
+        return (coordinates[0]+1, coordinates[1])
+    if direction == "diagonal":
+        return (coordinates[0]+1, coordinates[1]+1)
 
 
 class TicTacToe:
@@ -13,22 +25,46 @@ class TicTacToe:
             self.computerplayer = "O"
         if self.humanplayer == "O":
             self.computerplayer = "X"
-            
-    def X_wins(self):
-        pass
     
-    def O_wins(self):
-        pass
-    
+    def wins(self, symbol):    
+        directions = ["horizontal", "vertical", "diagonal"]
+        for direction in directions:        
+            for square in self.board.state:            
+                currentsquare = square
+                in_a_row = 0            
+                while currentsquare in self.board.state and self.board.state[currentsquare] == symbol:
+                    in_a_row += 1
+                    # print (currentsquare[0]+1, currentsquare[1]+1) 
+                    # print direction + " " + str(in_a_row)
+                    currentsquare = next(currentsquare, direction)
+                if in_a_row >= self.number:
+                    return True
+        return False                    
+
     def boardfull(self):
         for square in self.board.state:
             if self.board.state[square] == "_":
                 return False
         return True
     
-    def play(self):         
-        self.board.displayboard()
-        print self.boardfull()        
+    def play(self):    
+        while not (self.wins("X") or self.wins("O")) and not self.boardfull():        
+            self.board.displayboard()
+            print "X wins: " + str(self.wins("X"))
+            print "O wins: " + str(self.wins("O"))
+            print "board full: " + str(self.boardfull())  
+            horiz = int(raw_input("Enter horizontal coordinate: \n")) - 1
+            vert = int(raw_input("Enter vertical coordinate: \n")) - 1
+            symbol = raw_input("Enter symbol: \n")
+            self.board.state[(vert, horiz)] = symbol
+        for symbol in ["X", "O"]:
+            if self.wins(symbol):
+                self.board.displayboard()
+                print symbol + " " + "wins!"
+        if self.boardfull():
+            self.board.displayboard()
+            print "Board Full!"
+                        
         
         
 class Board:
