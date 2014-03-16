@@ -16,6 +16,8 @@ class TicTacToe:
 
     def __init__(self, rows, columns, number, humanplayer):
         self.board = Board(rows, columns, number)
+        self.rows = rows
+        self.columns = colimns
         self.number = number
         self.humanplayer = humanplayer
         if self.humanplayer == "X":
@@ -26,14 +28,11 @@ class TicTacToe:
     
     def play(self):    
         while not (self.board.wins("X") or self.board.wins("O")) and not self.board.full():        
-            self.board.displayboard()
-            print "X wins: " + str(self.board.wins("X"))
-            print "O wins: " + str(self.board.wins("O"))
-            print "board full: " + str(self.board.full())  
-            horiz = int(raw_input("Enter horizontal coordinate: \n")) - 1
-            vert = int(raw_input("Enter vertical coordinate: \n")) - 1
+            self.board.displayboard()  
+            horiz = int(raw_input("Enter row number, starting from top: \n")) - 1
+            vert = int(raw_input("Enter column number, starting from left: \n")) - 1
             symbol = raw_input("Enter symbol: \n")
-            self.board.state[(vert, horiz)] = symbol
+            self.board.state[(horiz, vert)] = symbol
         for symbol in ["X", "O"]:
             if self.board.wins(symbol):
                 self.board.displayboard()
@@ -46,7 +45,7 @@ class TicTacToe:
         
 class Board:
 
-    def __init__(self, rows, columns, number):
+    def __init__(self, rows, columns, number, symbol="X"):
         state = {}
         for row in range(rows):
             for column in range(columns):
@@ -54,7 +53,8 @@ class Board:
         self.state = state
         self.rows = rows
         self.columns = columns  
-        self.number = number        
+        self.number = number 
+        self.symbol = symbol        
 
 
     def displayboard(self):        
