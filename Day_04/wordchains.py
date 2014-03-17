@@ -6,7 +6,7 @@
 import string
 
 
-f = open("..\Day 3\dictionary.txt")
+f = open("..\Day_03\dictionary.txt")
 wordlist = f.readlines()
 f.close()
 
