@@ -1,0 +1,10 @@
+"Mock Academy", personal App Academy emulation, Week 2
+
+
+Day 6: Minesweeper (translation)
+
+Day 7: Chess (translation)
+
+Day 8: Chess (translation) 
+
+Day 9: Checkers (new and translation)
