@@ -1,0 +1,1038 @@
+
+Day 4
+------
+
+Recursion Exercises
+-------------------
+First, we'll translate the exercises on recursion that Zack and his partner for the day, Ben Hass, did, in the file 
+https://github.com/zackmdavis/App_Academy_Exercises/blob/master/Week_1/recursion.rb.
+Note that since Zack and Ben modify Ruby's Array class in this file, this will give us the opportunity to practice the closest Python analogue of monkeypatching built-in types,
+which is to create user-defined subclasses.
+
+The first function in the file is called "range". Of course, Python has a built-in function called "range", so let's use a different name, "range1". (Experimentation with the interactive
+interpreter shows that Python will let you overwrite its built-in range function if you want; this is no doubt related to the namespace hierarchy discussed in Chapter 9 of the Python tutorial.
+Here, of course, we don't have any particular desire to usurp the name "range".) Note that in the original Ruby, the + operator is used to combine arrays. Does the same work for lists in 
+Python? Yes, it turns out.
+
+
+///Original(Ruby)///
+
+def range(first, last)
+  if (first == last)
+    return [first]
+  else
+    return [first] + range(first + 1, last)
+  end
+
+end
+
+///
+
+
+///Translation(Python)///
+
+def range1(first, last):
+    if first == last:
+        return [first]
+    else:
+        return [first] + range1(first + 1, last)
+        
+///
+
+Experimentation shows that this behaves as expected.
+
+
+The rest of the file consists mostly of methods that Zack and Ben add to Ruby's Array class. The first is recursive summation:
+
+///Original (Ruby)///
+
+class Array
+
+  def sum_recursive
+    if self.length == 0
+      return 0
+    elsif self.length == 1
+      return self[0]
+    else
+      return self[0] + self[1...self.length].sum_recursive
+    end
+  end
+  
+ ///
+ 
+ 
+ Note that a naïve "direct translation" won't work!:
+ 
+ ///Translation Attempt (Python)///
+ 
+ class Array(list):
+    
+    def sum_recursive(self):
+        if len(self) == 0:
+            return 0
+        elif len(self) == 1:
+            return self[0]
+        else:
+            return self[0] + self[1:len(self)].sum_recursive() 
+ 
+ ///
+ 
+ This works for an "Array" consisting of zero or one element, but as soon as we try it with two or more, we get "AttributeError: 'list' object has no attribute 'sum_recursive'."
+ The problem is in the last line, where we write self[1:len(self)].sum_recursive(). Remember in Python we can't change the built-in list type; our "Array" is a new class, for all that it 
+ inherits the methods of list. We need to write, instead:
+ 
+ ///Transation (Python)///
+ 
+ class Array(list):
+    
+    def sum_recursive(self):
+        if len(self) == 0:
+            return 0
+        elif len(self) == 1:
+            return self[0]
+        else:
+            L = Array()
+            for n in range(1, len(self)):
+                L.append(self[n])
+            return self[0] + L.sum_recursive()
+
+///
+
+The next method is iterative summation (recall the distinction between recursion and iteration from SICP 1.2.1):
+
+///...Original (Ruby) (cont.)///
+  def sum_iterative
+    sum = 0
+    self.each do |n|
+      sum += n
+    end
+    sum
+  end
+
+end
+
+///
+
+///...Translation (Python) (cont.)///
+
+    def sum_iterative(self):
+        sum = 0
+        for n in self:
+            sum += n
+        return sum  
+        
+///
+
+At this point in the original file, Zack and Ben temporarily exit the Array class definition and define a couple of new outside functions. In Python, you can't "temporarily" exit a class
+definition, because when you "return" you will be creating a new class with the same name. (You can modify an existing user-defined class in Python, but it's more awkward:
+you have to define new methods as functions outside the class, then write something like MyClass.newmethod = newmethod. I've also seen mention of something called "decorators", but I don't
+know what that is yet.) So, we are faced with a choice here: either continue to actually translate the *code*, which will require reordering the elements and putting all the new Array 
+methods under a single class definition, or merely "translate" the *exercise*, which won't (since the point is mostly about the method definitions themselves, without any specific larger
+context). Since this is an exercise after all, we'll opt for the latter. (It's not like it would be difficult to change, anyway.) EDIT: Actually, I've changed my mind, and will go for the
+accurate translation after all.
+
+So, next we have "dumb" and "smart" exponentiation (so named because the first one requires a linear number of multiplications, the second log):
+
+///Original (Ruby)///
+def expt_dumb(base, exp)
+  if exp == 0
+    return 1
+  else
+    return base*expt_dumb(base, exp-1)
+  end
+end
+///
+
+///Translation (Python)///
+
+def expt_dumb(base, exp):
+    if exp == 0:
+        return 1
+    else:
+        return base*expt_dumb(base, exp - 1)
+
+///
+
+
+///Original (Ruby)///
+
+def expt_smart(base, exp)
+  # O(lg "exp") multiplications --- more efficient!
+  if exp == 0
+    return 1
+  elsif exp % 2 == 0
+    n = expt_smart(base, exp/2)
+    return n * n
+  else
+    n = expt_smart(base, (exp-1)/2)
+    return base * n * n
+  end
+end
+
+///
+
+///Translation (Python)///
+
+def expt_smart(base, exp):
+    # O(lg "exp") multiplications --- more efficient!
+    if exp == 0:
+        return 1
+    elif exp % 2 == 0:
+        n = expt_smart(base, exp/2)
+        return n*n
+    else:
+        n = expt_smart(base, (exp-1)/2)
+        return base*n*n        
+
+///
+
+Next we add another list method:
+
+///Original (Ruby)///
+
+class Array
+
+  def deep_dup
+    arr = []
+    self.each do |el|
+      if el.is_a?(Array)
+        arr << el.deep_dup
+      else
+        arr << el
+      end
+    end
+    arr
+  end
+
+end
+///
+
+This method, you may notice, does exactly nothing. Or, more precisely, it returns an identical copy of the array.
+
+///Translation (Python)///
+    
+def deep_dup(self):
+    arr = []
+    for el in self:
+        if type(el) == Array:
+            arr.append(el.deep_dup())
+        else:
+            arr.append(el)            
+    return arr
+    
+Array.deep_dup = deep_dup    
+    
+///
+
+Testing confirms the "functionality" specified above. Note that Ruby object.is_a?(Class) corresponds to Python type(object) == Class.
+
+Next we have iterative and recursive Fibonacci numbers:
+
+///Original (Ruby)///
+
+def fibs_recursive(n)
+  if n == 0
+    return []
+  elsif n == 1
+    return [0]
+  elsif n == 2
+    return [0, 1]
+  else
+    prev = fibs_recursive(n-1)
+    return prev + [prev[-1]+prev[-2]]
+  end
+end
+
+///
+
+///Translation (Python)///
+
+def fibs_recursive(n):
+    if n == 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0,1]
+    else:
+        prev = fibs_recursive(n-1)
+        return prev + [prev[-1]+prev[-2]]
+
+///
+
+///Original (Ruby)///
+
+def fibs_iterative(n)
+  if n == 0
+    return []
+  elsif n == 1
+    return [0]
+  else
+    fibs = [0, 1]
+    (n-2).times do
+      fibs << fibs[-1] + fibs[-2]
+    end
+    return fibs
+  end
+end
+
+///
+
+///Translation (Python)///
+
+def fibs_iterative(n):
+    if n == 0:
+        return []
+    elif n == 1:
+        return [0]
+    else:
+        fibs = [0, 1]
+        k = 1
+        while k <= n-2:
+            fibs.append(fibs[-1] + fibs[-2])
+            k += 1
+        return fibs
+
+///
+
+Next come two versions of binary search.
+
+///Original (Ruby)///
+
+def binary_search(array, first, last, target)
+  middle = (last - first)/2 + first
+  middle_val = array[middle]
+  if middle_val == target
+    return middle
+  elsif middle_val < target
+    return binary_search(array, middle + 1, array.length-1, target)
+  else
+    return binary_search(array, 0, middle, target)
+  end
+end
+
+///
+
+///Translation (Python)///
+
+def binary_search(array, first, last, target):
+    middle = (last - first)/2 + first
+    middle_val = array[middle]
+    if middle_val == target:
+        return middle
+    elif middle_val < target:
+        return binary_search(array, middle + 1, len(array) - 1, target)
+    else:
+        return binary_search(array, 0, middle, target)
+        
+///
+
+In both Python and Ruby, this produces recursion-depth errors when run on the interactive interpreter on arrays with as few as 100 elements. Let's see if the second is better:
+
+///Original (Ruby)///
+
+def binary_search2(array, target)
+  middle = array.length/2
+  middle_val = array[middle]
+  if middle_val == target
+    return middle
+  elsif middle_val < target
+    return middle + 1 + binary_search2(array[middle + 1..array.length-1], target)
+  else
+    return binary_search2(array[0...middle], target)
+  end
+end
+
+///
+
+///Translation (Python)///
+
+def binary_search2(array, target):
+    middle = len(array)/2
+    middle_val = array[middle]
+    if middle_val == target:
+        return middle
+    elif middle_val < target:
+        return middle + 1 + binary_search2(array[middle + 1 : len(array)], target)
+    else:
+        return binary_search2(array[:middle], target)
+
+///
+
+This one indeed seems to work without problems, but I don't know what the difference is, exactly -- specifically, I don't know why the second should be so much more efficient.
+They both have the same number of recursions, don't they? The main difference seems to be that binary_search2 is applied to lists of progressively smaller size as the recursion progresses. 
+Apparently, even though nothing is done with most of the elements of array in binary_search, merely continuing to formally pass the whole list to the function each time causes the problem.
+Let's note this point for future reference.
+
+Next we have an algorithm for making change, which Zack and Ben take care to note is not "optimal" (I'm not sure what "optimal" means in this context):
+
+///Original (Ruby)///
+
+def make_change(amount, denominations = [25, 10, 5, 1])
+  # take the largest element of denominations less or equal to than amount
+  # appended with recursive call to same
+  # this "greedy" algorithm gives correct change, but not optimal change
+  if amount == 0
+    return []
+  else
+    next_coin = denominations.select{|n| n <= amount}[0]
+    [next_coin] + make_change(amount-next_coin)
+  end
+end
+
+///
+
+///Translation (Python)///
+
+def make_change(amount, denominations = [25, 10, 5, 1]):
+    # take the largest element of denominations less or equal to than amount
+    # appended with recursive call to same
+    # this "greedy" algorithm gives correct change, but not optimal change
+    if amount == 0:
+        return []
+    else:
+        next_coin = [n for n in denominations if n <= amount][0]
+        return [next_coin] + make_change(amount-next_coin)
+
+///
+
+Next, we add Mergesort to the Array methods; this involves some trickiness in the translation.
+
+
+///Original (Ruby)///
+
+class Array
+  def self.my_merge(left, right)
+    merged = []
+    until left.empty? && right.empty?
+      if left.empty? || right.empty?
+        merged += left + right
+        return merged
+      elsif (left[0] < right[0])
+        merged << left.shift
+      else
+        merged << right.shift
+      end
+    end
+    merged
+  end
+
+  def my_mergesort
+    if self.length <= 1
+      return self
+    else
+      middle = self.length/2
+      left = self[0...middle].my_mergesort
+      right = self[middle...self.length].my_mergesort
+      return Array.my_merge(left, right)
+    end
+  end
+
+end
+
+///
+
+The first thing to notice is that the merge function is named "self.my_merge". We can't write that in Python (it will raise a SyntaxError); so what does it mean? It turns out to mean that
+my_merge is supposed to be a *static method* -- which apparently means a method that doesn't take the object as an implicit argument. In other words, we really want my_merge(left, right), not 
+my_merge(self, left, right). In Python, the way to accomplish this is (after defining my_merge) to write Array.my_merge = staticmethod(my_merge) (instead of Array.my_merge = my_merge).
+
+Also note the Ruby syntax: && for "and", || for "or" -- apparently the difference is order of precedence (these get evaluated before the corresponding words) -- and the empty? method. 
+
+///Translation (Python)///
+
+def my_merge(left, right):
+    merged = []
+    while not (len(left) == 0 and len(right) == 0):
+        if len(left) == 0 or len(right) == 0:
+            merged += left + right
+            return merged
+        elif left[0] < right[0]:
+            merged.append(left.pop(0))
+        else:
+            merged.append(right.pop(0))
+    return merged
+
+def my_mergesort(self):
+    if len(self) <= 1:
+        return self
+    else:
+        middle = len(self)/2
+        selftomiddle = Array()
+        for x in self[:middle]:
+            selftomiddle.append(x)
+        left = selftomiddle.my_mergesort()
+        selfmiddleon = Array()
+        for x in self[middle:]:
+            selfmiddleon.append(x)
+        right = selfmiddleon.my_mergesort()
+        return Array.my_merge(left, right)    
+
+ 
+Array.my_merge = staticmethod(my_merge)
+Array.my_mergesort = my_mergesort  
+
+///
+
+Remember, unlike in the original Ruby, Array is a new class we've created which inherits list's methods, not a set of additional methods for list. This is why some circumlocution in the code 
+is necessary in order to turn lists (such as self[:middle]) into Arrays.
+
+The last function in the file is designed to compute the powerset of a set:
+
+///Original (Ruby)///
+ 
+def subsets(set)
+  # P{S U {t}} = P{S} U {s U {t} | s >= P(S)}
+  # id est, the powerset of the union of the set S and the singleton set {t} ...
+  # equals the union of the powerset of S with
+  # the sets s U {t} for all s in the the powerset of S
+  if set.count == 0
+    return [[]]
+  else
+    small = set.last
+    return subsets(set[0...set.length-1]) +
+     subsets(set[0...set.length-1]).map{|s| s + [small]}
+  end
+end  
+
+///
+
+Note: the fact described in the comment may be used to show (by induction) that the cardinality of the powerset of a set with N elements is 2^N.
+
+For some reason, Zack and Ben defined their subsets function for arrays instead of sets (even though Ruby, like Python, has a set data type), so we'll do likewise in our Python version:
+
+///Translation (Python)///
+
+def subsets(set):
+    # P{S U {t}} = P{S} U {s U {t} | s >= P(S)}
+    # id est, the powerset of the union of the set S and the singleton set {t} ...
+    # equals the union of the powerset of S with
+    # the sets s U {t} for all s in the the powerset of S
+    if len(set) == 0:
+        return [[]]
+    else:   
+        small = set[-1]
+        return (subsets(set[:len(set)-1]) + 
+            [s + [small] for s in subsets(set[:len(set)-1])])  
+
+///
+
+
+Word Chains
+-----------
+
+Our task: "Find a way to mutate a dictionary word into another of the same length by changing one letter at a time,
+with all the intermediaries also being valid words (e.g., *duck* to unprintable to *funk* to *fund*)." (Presumably,
+"unprintable" means "fuck". It may be unprintable in a blog post, but we want our program to print it!)
+
+We'll use the file dictionary.txt from Day 3. Let's see if we can practice getting Python to look in another directory. 
+If this fails, we'll just save a copy in the Day 4 directory.
+
+Attempt:
+
+///Python///
+
+f = open("..\Day 3\dictionary.txt")
+wordlist = f.readlines()
+f.close()
+
+print wordlist[0]
+
+///
+
+It works! (This solution was arrived at by trial, error, and Google searching, of course.)
+
+So now to our task.
+
+First, let's test something: whether Python agrees with the (alphabetical) order the words in dictionary.txt are listed in:
+
+///...Python...///
+
+for i in range(len(wordlist)-1):
+    if wordlist[i] > wordlist[i+1]:
+        print "Violators!: {violator1} {violator2}".format(violator1=wordlist[i], violator2=wordlist[i+1])
+print "Done"
+
+///
+
+Yikes! It turns out there are quite a lot of violators. This means, unfortunately, that we won't be able to apply what we've learned 
+about efficient searching (binary search) in the easy way that I had hoped. (We could still do it, by coding-in the order convention
+used in dictionary.txt, but I'm not sure I want to do that.)
+
+(The output also reminds us that each word of the file comes with a newline character "\n" appended.)
+
+Let's first write a function that changes a word by one (specified) letter:
+
+///...Python...///
+
+def mutate(word, letter_index):
+    mutations = [word]
+    for letter in string.ascii_lowercase:
+        attempt = list(word)
+        attempt[letter_index] = letter
+        attempt = "".join(attempt) + '\n'
+        if attempt in wordlist and attempt[:-1] != word:
+            mutations.append(attempt[:-1])
+    return mutations
+
+///
+
+This, of course, returns a list of all the words that differ from the given one by the specified letter. E.g., for ("duck",0) it returns
+['duck', 'buck', 'fuck', 'luck', 'muck', 'puck', 'suck', 'tuck', 'yuck']. (We'll call this a "mutate list".)
+
+Now let's consider the problem. Suppose we want to get from "duck" to "fund". We should first note the letter(s) they have in common, because 
+any searching through mutations of those letters will be a waste of time (EDIT: This is wrong!!). In this case, they share the second letter, index 1, "u". 
+
+For each index where they don't have the same letter, we'll apply mutate and look in the resulting list to see whether there is a word whose 
+letter at that index is the same as the target word. For example, from mutate("duck",0), we would select "fuck". If not, we proceed to the next 
+index. If there are none in any of the mutation lists for any of the indices, our task is impossible and the program should end. However, if there 
+is more than one such "eligible mutation", then we should keep track of all of them so that we can go back and try another if we run into a dead end
+on one. 
+
+Assuming we've got a shared-letter word for one of the indices, we can now consider this word to be our new origin word, and recurse:
+
+///...Python...///
+
+def wordchain(origin_word, target_word):
+    if len(origin_word) != len(target_word):
+        print "Sorry, words must be same length!"
+    else:              
+        wordlength = len(origin_word)    
+        differlist = [i for i in range(wordlength) if origin_word[i] != target_word[i]]                        
+        for i in differlist:
+            for word in mutate(origin_word, i):
+                if word == target_word:
+                    print word                    
+                elif word[i] == target_word[i]:
+                    print word
+                    wordchain(word, target_word)                    
+///
+
+This basically works, but the output isn't elegant. Here's what wordchain("duck", "fund") produces:
+
+fuck
+funk
+fund
+dunk
+funk
+fund
+
+
+As you can see, it actually found *two* paths, but there's no labeling of this, and furthermore it doesn't
+print the original word (origin_word). Also, of course, it prints stepping stones on the way to a dead end:
+e.g., wordchain("bury, fund") yields:
+
+fury
+
+
+The problem of not printing the original word can be easily gotten around by code outside the function:
+
+///Python///
+print origin_word
+print wordchain(origin_word, target_word)
+///
+
+(Note that using print wordchain(...) will produce "None" at the end of the output, since the function doesn't
+return anything. For now I'm treating this as a useful signal that the output is finished, although...LAZY HACK!)
+While we're at it, let's go ahead and add an interactive prompt:
+
+///...Python...///
+
+origin_word = raw_input("Enter starting word: \n")
+target_word = raw_input("Enter target word: \n")
+
+print " "
+
+print origin_word
+print wordchain(origin_word, target_word)
+
+///
+
+As for the other issues, we'll make a quick attempt. Let's put the code that performs each one-letter "step" inside
+its own function:
+
+///Python///
+
+def wordstep(origin_word, target_word, list):            
+    wordlength = len(origin_word)    
+    differlist = [i for i in range(wordlength) if origin_word[i] != target_word[i]] 
+    stepword = False         
+    for i in differlist:            
+        for word in mutate(origin_word, i):                                   
+            if word[i] == target_word[i]:
+                stepword = True
+                list.append(word)                
+    return (stepword, list[-1]) 
+    
+def wordchain(origin_word, target_word):
+    if len(origin_word) != len(target_word):
+        print "Sorry, words must be same length!" 
+    else:    
+        chain = [origin_word]
+        word = origin_word
+        while (not target_word in chain) and wordstep(word, target_word, chain)[0] == True:
+            print word        
+            word = wordstep(word, target_word, chain)[1]
+        if target_word in chain:        
+            print target_word
+        else:
+            print "Failed!"
+
+/// 
+
+This seems to work, although the internal list called chain doesn't look like I expect it to.
+No doubt this has to do with the fact that all of wordstep has to be performed in order to check
+the while condition.
+
+Rather than refining further, I'll move on to checking (and translating) what Zack and Ben did in Ruby.
+
+WAIT NO! I just discovered that my program doesn't work after all. I had neglected to consider the possibility 
+that a step in the chain need not change a letter to the corresponding letter in the target word. E.g.: 
+
+bunt -> hunt -> hint -> tint
+
+So I'll have to fix this, and it'll basicaly require rethinking the problem from (almost) scratch.
+
+The mutate function, at least, should still be good for use. 
+
+[A bunch of thinking and preliminary attempts without really getting off the ground...]
+
+Actually, Zack mentions [breadth-first search](http://en.wikipedia.org/wiki/Breadth-first_search) in his [blog post](http://zackmdavis.net/blog/2013/09/app-academy-diary-week-one/); let's go ahead and (formally) learn this algorithm and see if we can apply it. We'll first have to understand the concept of a *queue*. 
+
+A queue is a type of list with two operations: adding an element to the "rear" ("enqueuing") and taking an element out from 
+the "front" ("dequeuing"). It is, thus, a "first-in-first-out" (FIFO) data structure. Python comes with a Queue
+module, so we don't have to worry about implementing this ourselves (at least for our purposes here). 
+
+Here is Wikipedia's description of the breadth-first search (BFS) algorithm:
+
+1. Enqueue the root node
+2. Dequeue a node and examine it
+ - If the element sought is found in this node, quit the search and return a result.
+ - Otherwise enqueue any successors (the direct child nodes) that have not yet been discovered.
+3. If the queue is empty, every node on the graph has been examined – quit the search and return "not found".
+4. If the queue is not empty, repeat from Step 2.
+
+Then appears the comment:
+
+Note: Using a stack instead of a queue would turn this algorithm into a depth-first search.
+
+This comment may be key in terms of understanding what was at the root of my difficulties: the issue
+seems to have been that I could not think of how to move horizontally in the search tree while still "remembering" 
+to search child nodes later. This is exactly what a queue allows one to do. 
+
+In the context of this problem, a node corresponds to a word, and the child nodes of a node correspond to the 
+words in (all of) the mutate lists for that word (i.e. for each letter position). 
+
+Translating the pseudocode given in Wikipedia into Python:
+
+///Python///
+
+import Queue
+
+def wordfind(origin_word, target_word):
+    if len(origin_word) != len(target_word):
+        print "Sorry, words must be same length!" 
+    
+    else:
+        Q = Queue.Queue()
+        V = set()
+        Q.put(origin_word)
+        while not Q.empty():
+            word = Q.get()
+            if word == target_word:
+                return word
+            else:
+                for letter_index in range(len(word)):
+                    for wordie in mutate(word, letter_index):
+                        if not wordie in V:
+                            V.add(wordie)
+                            Q.put(wordie)
+
+/// 
+
+ 
+Now, of course, this procedure only returns the target word; while it will (necessarily) "find" a word chain,
+it won't tell us what it is. To get it to do that, we have to program it to "remember" ancestor nodes. So, instead of
+just a set consisting of all the nodes we've examined, let's build a dictionary which will tell us the immediate ancestor
+of each node as well: 
+
+///Python///
+
+import Queue        
+
+def wordchain(origin_word, target_word):
+    if len(origin_word) != len(target_word):
+        print "Sorry, words must be same length!"     
+    else:
+        Q = Queue.Queue()        
+        A = {} # for "Ancestor"
+        Q.put(origin_word)        
+        while not Q.empty():
+            word = Q.get()            
+            if word == target_word:                
+                revchain = [target_word]
+                w = target_word
+                while w != origin_word:
+                    revchain.append(A[w])
+                    w = A[w]           
+                chain = revchain[::-1]
+                return chain                    
+            else:
+                for letter_index in range(len(word)):
+                    for wordie in mutate(word, letter_index):
+                        if not wordie in A:                            
+                            A[wordie] = word
+                            Q.put(wordie)
+
+/// 
+ 
+It works!!! 
+
+For example, it finds the following 14-word chain from "great" to "blade":
+
+["great", "treat", "tread", "bread", "break", "wreak", "wreck", "wrack", "track",
+ "trace", "brace", "braze", "blaze", "blade"] 
+
+*Now* let's see what Zack and Ben did in Ruby.
+
+
+
+Translation of Davis & Hass Word Chains
+----------------------------------------
+
+Ach! So they used an object-oriented approach; should have known. (Recall that "object-oriented" is jargon
+for "using classes".) It begins:
+
+///Original (Ruby)///
+
+class String
+  def adjacent?(word)
+    return false unless self.length == word.length
+    matches = 0
+    word.length.times do |i|
+      matches += 1 if self[i] == word[i]
+    end
+    (word.length - matches) == 1 ? true : false
+  end
+end
+
+///
+
+This, nota bene, is once again a modification of a built-in Ruby class. As we know, we can't do that in Python;
+we have to inherit from the corresponding class (str) instead:
+
+///Translation (Python)///
+
+class String(str):
+    def adjacent(self, word):
+        if not len(self) == len(word):
+            return False
+        matches = 0
+        for i in range(len(word)):
+            if self[i] == word[i]:
+                matches += 1
+        if len(word) - matches == 1:
+            return True
+        else:
+            return False
+///
+
+But wait a minute: this is going to be awkward, if not impossible, to use. How are we even going to construct a 
+member of this class? Strings in Python are not mutable; in particular, there's no append method. You can't, as far as I know,
+take a string, like "mystring", and make it an instance of our new subclass String. So let's take a step back and
+think about how the original code is going to be used. If we do that, we realize almost immediately that we just want
+a way of determining whether the "adjacent" condition holds between two strings (which, by the way, is nothing more than
+whether one is in a mutate list of the other, in the terminology of our own Word Chain program from before), and there's no reason
+that this should be a one-argument method on a string, instead of a two-argument function of two strings. It seems, rather, to be
+simply a question of idiomatic Ruby, where we have word.length instead of Python's len(word). So never mind the new subclass, let's
+just make adjacent a new (outside) function:
+
+///Translation (Python)///
+
+def adjacent(word1, word2):
+    if not len(word1) == len(word2):
+        return False
+    matches = 0
+    for i in range(len(word2)):
+        if word1[i] == word2[i]:
+            matches += 1
+    if len(word2) - matches == 1:
+        return True
+    else:
+        return False  
+        
+///     
+
+
+The class WordChains then begins:
+
+///Original (Ruby)///
+
+class WordChains
+
+  DICTIONARY = File.readlines('dictionary.txt').map(&:chomp)
+
+  def adjacent_words(word)
+    DICTIONARY.select { |other_word| other_word.adjacent?(word) }
+  end
+  
+///   
+
+Capital letters in Ruby indicate constants, which don't exist in Python (caveats needed here?). 
+And if we simply do this:
+
+///Translation Attempt (Python)///
+
+class WordChains:
+    
+    dictionary = [word[:-1] for word in open("..\Day 3\dictionary.txt").readlines()]
+    
+    def adjacent_words(self, word):
+        return [other_word for other_word in dictionary if adjacent(other_word, word)]  
+///
+
+we'll get "NameError: global name 'dictionary' is not defined" when we try to call adjacent_words
+on a WordChains instance. I'm not sure why this is (doesn't the above code tell Python to assign the
+name "dictionary" as soon as an instance of WordChains is created?), but the following "normal" code
+fixes it:
+
+///Translation (Python)///
+
+class WordChains:
+
+    def __init__(self):    
+        self.dictionary = [word[:-1] for word in open("..\Day 3\dictionary.txt").readlines()]
+    
+    def adjacent_words(self, word):
+        return [other_word for other_word in self.dictionary if adjacent(other_word, word)]        
+
+///    
+
+EDIT: Turns out the problem was in adjacent_words, where we needed to write self.dictionary; the following 
+works:
+
+///Translation (Python)///
+
+class WordChains:
+       
+    dictionary = [word[:-1] for word in open("..\Day 3\dictionary.txt").readlines()]
+    
+    def adjacent_words(self, word):
+        return [other_word for other_word in self.dictionary if adjacent(other_word, word)]
+
+
+///
+
+Next is a method called find_chain:
+
+///...Original (Ruby)...///
+
+  def find_chain(start, target)
+    found = false
+    scanned = []
+    to_scan = []
+    to_scan.push({start => nil})
+    while !to_scan.empty? and !found do
+      scanning = to_scan.shift
+      if scanning.keys[0] == target
+        found = true
+        scanned.push(scanning)
+      else
+        adjacent_words(scanning.keys[0]).each do |adj_word|
+           if !scanned.include?(adj_word) and !to_scan.include?(adj_word)
+             to_scan.push({adj_word => scanning.keys[0]})
+           end
+        end
+        scanned.push(scanning)
+      end
+    end
+    found ? construct_path(target, scanned) : nil
+  end 
+
+///
+
+///...Translation (Python)...///
+
+    def find_chain(self, start, target):
+        found = False
+        scanned = []
+        to_scan = []
+        to_scan.append({start : None})
+        while (not to_scan == []) and (not found):
+            scanning = to_scan.pop(0)            
+            if scanning.keys()[0] == target:
+                found = True                
+                scanned.append(scanning)
+            else:
+                for adj_word in self.adjacent_words(scanning.keys()[0]):
+                    if not adj_word in scanned and not adj_word in to_scan:
+                        to_scan.append({adj_word : scanning.keys()[0]})
+                scanned.append(scanning)
+        if found:
+            return self.__construct_path(target, scanned)
+
+///
+
+
+This is basically exactly equivalent to the breadth-first search we wrote before, but note the manual implementation of
+queue behavior and the technique of building a list of one-entry dictionaries (in Ruby terminology, an array of one-entry hashes).
+Also note that although __construct_path is defined "later" (see below), it is able to be called here. Finally, the word "return"
+in the last line is very important!
+
+The method construct_path is private in the original, so in our translation we'll give it the double-underscore prefix:      
+
+///...Original (Ruby)...///
+
+private
+
+  def construct_path(target, scanned)
+    chain = [target]
+    backlink = scanned.find{|h| h.keys[0] == target}
+    parent = backlink[target]
+    until parent.nil?
+      chain.push(parent)
+      backlink = scanned.find{|h| h.keys[0] == parent}
+      parent = backlink[parent]
+    end
+    chain.reverse
+  end
+
+///
+
+///...Translation (Python)...///
+
+    def __construct_path(self, target, scanned):
+        chain = [target]
+        backlink = [h for h in scanned if h.keys()[0] == target][0]
+        parent = backlink[target]
+        while not parent == None:
+            chain.append(parent)
+            backlink = [h for h in scanned if h.keys()[0] == parent][0]
+            parent = backlink[parent]
+        return chain[::-1]
+
+
+///
+
+Success!
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
