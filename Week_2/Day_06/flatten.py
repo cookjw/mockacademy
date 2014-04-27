@@ -1,4 +1,4 @@
-
+# from http://stackoverflow.com/questions/406121/flattening-a-shallow-list-in-python?lq=1
 
 def flatten(x):
     result = []
