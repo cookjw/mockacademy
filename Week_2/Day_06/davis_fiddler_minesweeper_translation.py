@@ -1,7 +1,7 @@
 #Python translation of Minesweeper by Zack Davis and Jeff Fiddler, App Academy Week 2
 #Original at https://github.com/zackmdavis/App_Academy_Exercises/blob/master/Week_2/minesweeper.rb
 
-#CURRENT STATUS: Tile.boom is broken in some bizarre, indiscernible way (returning True when self.mine is False). Also: Unicode issues. Otherwise, seems to work.
+#CURRENT STATUS: Unicode issues. Otherwise, seems to work.
 
 import yaml
 
@@ -205,8 +205,8 @@ class MineBoard:
                 # elif tile.mine:
                     # rowstring = rowstring + u"m "
                 elif tile.explored:
-                    # if tile.boom:
-                    if tile.mine: # !
+                    if tile.boom():
+                    # if tile.mine: # !
                         # rowstring = rowstring + u"\u2622 " #  radioactivity symbol
                         rowstring = rowstring + u"r "
                     elif tile.number != 0:
@@ -346,39 +346,7 @@ class Tile:
         else:
             return False
         
-
-    
-
-        
-
-    
-    
-    
-    
-   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-                
+             
         
         
 Minesweeper()
