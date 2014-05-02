@@ -1,0 +1,987 @@
+Day 6
+-------
+
+
+Week 2 begins with some more game-building exercises: Minesweeper, checkers, and chess. To save time,
+I'm going to skip doing my own versions of Minesweeper and chess, and confine myself to translating 
+the work done by Zack and his partner(s). This is okay with me because at the real App Academy these
+were pair-programming exercises anyway, so in real-life I would have had a partner to help. In the case
+of checkers, however, my understanding from Zack's post is that this was an individual task; so my plan 
+is to revert back to my so-far usual procedure of doing my own version before translating.
+
+The task for Day 6 is Minesweeper -- that cute game I remember playing on Windows 3.11 in the 1990s. Zack writes 
+that he and his Day-6 partner (Jeff Fiddler) managed to implement a cursor interface for the game, which is something
+I don't know how to do yet. (EDIT: Trying out their game reveals that their cursor interface doesn't actually involve
+the mouse, so is probably considerably less scary than I was assuming.) So let's dive in and see how they did it.
+
+The file begins:
+
+/// Original (Ruby) ///
+
+require 'ostruct'
+require 'yaml'
+
+///
+
+Yikes! Okay, so they're importing some Ruby libraries. This is the kind of thing where translation can be expected 
+to get tricky. There is, after all, no reason to expect a given library in Ruby to have a direct Python counterpart.
+Indeed, differing collections of libraries are very often among the reasons people have for preferring some programming
+languages to others. So, unless we're particularly lucky, we'll probably have to dive in fairly deeply in to the workings
+of the library functionalities being "require"d in order to understand them and implement them appropriately in Python.  
+
+So what are these things? It turns out that "ostruct" is an implementation of a data type called an OpenStruct. According
+to the [Ruby documentation](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/ostruct/rdoc/OpenStruct.html), "An OpenStruct is a data 
+structure, similar to a Hash, that allows the definition of arbitrary attributes with their accompanying values. This is 
+accomplished by using Ruby’s metaprogramming to define methods on the class itself." 
+
+Is there a Python equivalent? Well, in Python, one can already assign arbitrary attributes to any object of a user-defined class,
+so the answer is "there doesn't need to be". This explains why a Google search for "Python ostruct" is so fruitless. People have
+written "ports" of OpenStruct to Python, but such people inevitably are told in comments that they need not have done so. Indeed,
+the most useful search result I found was the reverse question: what is the Ruby equivalent of assigning attributes
+to an object that weren't included in the class definition? The answer (at least, an answer) is OpenStruct. 
+
+What about "yaml"? This, it turns out, isn't something Ruby-specific at all, but rather some sort of standardized thing which, of
+course, has a Ruby implementation. What is this standardized thing? [Wikipedia's]() first sentence isn't very helpful:
+"YAML...is a human-readable data serialization format that takes concepts from programming languages such as C, Perl, and Python,
+and ideas from XML and the data format of electronic mail (RFC 2822)."
+What on Earth is a "data serialization format"? Taken literally, the phrase is so vague as to be devoid of meaning. Clearly, some specific
+context is intended, but left completely unspecified. (This is a general problem with Wikipedia articles on computer science and programming
+topics, many of which have an inscrutable, jargon-filled character for this reason.) Alas, the [YAML documentation]() doesn't explicitly
+say what YAML is, either -- not explicitly enough for me, anyway.
+
+So for now, we'll just proceed and figure out what it is we need to do when we need to do it. Meanwhile, can at least download and import [a 
+Python version of YAML](http://pyyaml.org):
+
+/// Translation (Python) ///
+
+import yaml
+
+///
+
+
+
+A class "Minesweeper" is defined, beginning with some variables (constants, in the case of Ruby):
+
+///...Original (Ruby)...///
+
+# This class represents the Minesweeper game.
+class Minesweeper
+
+   DEFAULT_GAME_ROWS = 12
+   DEFAULT_GAME_COLS = 12
+   DEFAULT_MINES = 10
+   SAVE_FILE = 'saved_game.yaml'
+  
+   def initialize
+   setup
+   play
+   end
+  
+///  
+
+...wherein we receive our first hint about what the function of YAML will be: a means of storing saved games. For now, of course,
+SAVE_FILE is just the name of a certain string.
+
+///...Translation (Python)...///
+
+class Minesweeper:
+    
+    default_game_rows = 12
+    default_game_cols = 12
+    default_mines = 10
+    save_file = 'saved_game.yaml'
+    
+    def __init__(self):
+        __setup()
+        __play()    
+
+///
+
+Next come various private methods (in the original, hence double-underscores in the translation). The first is setup, and it contains a novelty: 
+the "case" keyword, which does not exist in Python:
+
+///...Original (Ruby)...///
+
+  def setup
+    @quit_requested = false
+
+    rows = DEFAULT_GAME_ROWS
+    cols = DEFAULT_GAME_COLS
+    mines = DEFAULT_MINES
+
+    puts "Welcome to Minesweeper"
+    puts "Current settings: size: #{rows}, #{cols}, mines: #{mines}"
+    puts "enter 'n' to start a new game, 's' to change size/mine settings, 'l' to load a saved game"
+    setup_input = get_char
+
+    case setup_input
+    when 'n'
+      @board = MineBoard.new(rows, cols, mines)
+    when 's'
+      rows, cols, mines = get_settings
+      @board = MineBoard.new(rows, cols,mines)
+    when 'l'
+      @board = YAML::load(File.open(SAVE_FILE, 'r'))
+    else
+      setup
+    end
+    puts "(note: you can save your game with 's' or quit with 'q')"
+  end
+  
+ ///
+  
+The context here suggests that this is just a weird way of writing what would "normally" (i.e. by me, in my naïveté) have been written
+with "if/el(s)if/else". Preliminary Google-research supports this conclusion, at least in this instance (there apparently being significant differences
+in the meaning which don't happen to come into play here):
+
+///...Translation (Python)...///
+
+    def __init__(self):
+        self.__setup()
+        self.__play()
+        
+    def __setup(self):
+        self.quit_requested = False 
+        
+        rows = self.default_game_rows
+        cols = self.default_game_cols
+        mines = self.default_mines
+        
+        print "Welcome to Minesweeper"
+        print "Current settings: size: {rows}, {cols}, mines: {mines}".format(rows = rows, cols = cols, mines = mines)
+        print "enter 'n' to start a new game, 's' to change size/mine settings, 'l' to load a saved game"
+        setup_input = self.__get_char()
+        
+        if setup_input == 'n':
+            self.board = MineBoard(rows, cols, mines)
+        elif setup_input == 's':
+            rows, cols, mines, = self.__get_settings()
+            self.board = MineBoard(rows, cols, mines)
+        elif setup_input == 'l':
+            self.board =  yaml.load(open(save_file, 'r'))
+        else:
+            self.__setup() 
+        print "(note: you can save your game with 's' or quit with 'q')"       
+        
+///
+
+It will be noted that I seem to have figured out how to translate the YAML business going on in the case of setup_input == 'l'.
+This was thanks to reading a bit of the PyYAML documentation and experimenting. It appears that yaml.load may act 
+on either the name of a file or a file (object) itself; here it's doing the latter.
+
+Now -- oh dear -- what is going on inside the get_char method?:
+
+///...Original (Ruby)...///
+
+  def get_char
+    # Thanks to http://stackoverflow.com/questions/8142901/ruby-stdin-getc-does-not-read-char-on-reception
+    begin
+      system("stty raw -echo")
+      str = STDIN.getc
+    ensure
+      system("stty -raw echo")
+    end
+    str.chr
+  end
+  
+ ///
+ 
+ 
+Reading the page at the URL in the comment (and links thence), one can deduce that the intention here was to have the user enter a single
+character to select an option, without having to press "Enter". Luckily for me, the same question has been asked in a Python context, and,
+by golly, if Zack and Jeff can copy code from Stack Overflow, so (I declare) can I:
+
+///...Translation (Python)...///
+
+    def __get_char(self):    
+        # Thanks to http://stackoverflow.com/questions/510357/python-read-a-single-character-from-the-user
+        class _Getch:
+            """Gets a single character from standard input.  Does not echo to the screen."""
+            def __init__(self):
+                try:
+                    self.impl = _GetchWindows()
+                except ImportError:
+                    self.impl = _GetchUnix()
+
+            def __call__(self): 
+                char = self.impl()
+                if char == '\x03':
+                    raise KeyboardInterrupt
+                elif char == '\x04':
+                    raise EOFError
+                return char
+
+        class _GetchUnix:
+            def __init__(self):
+                import tty
+                import sys
+
+            def __call__(self):
+                import sys
+                import tty
+                import termios
+                fd = sys.stdin.fileno()
+                old_settings = termios.tcgetattr(fd)
+                try:
+                    tty.setraw(sys.stdin.fileno())
+                    ch = sys.stdin.read(1)
+                finally:
+                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                return ch
+
+
+        class _GetchWindows:
+            def __init__(self):
+                import msvcrt
+
+            def __call__(self):
+                import msvcrt
+                return msvcrt.getch()
+
+
+        getch = _Getch()
+
+        return getch()
+    
+///  
+
+
+
+I don't pretend to be familiar with all of the library functions being invoked here, but I did at least learn the following during this step:
+
+- Ruby's "begin" keyword is analogous to Python's "try", i.e. what one uses in anticipation of exceptions (with "ensure" corresponding to "finally");
+- the system method in Ruby allows one to enter command-line commands (as does os.system in Python);
+- in Python, in addition to __init__, there is also __call__, which allows one to distinguish between merely *creating* a class instance, and
+actually having it do something (or, in other words, it in effect allows you to treat the object as a function); and
+- "raw" at the command line disables "processing", including the ability to stop the program by Ctrl+C; "echo" refers to displaying what one types.
+
+
+
+Next is get_settings, which is fairly straightforward:
+
+///...Original (Ruby)...///
+
+  def get_settings
+    puts "enter new settings like 'rows,columns,number_of_mines'"
+    settings_input = gets.chomp
+    settings_input.split(',').map(&:to_i)
+  end
+
+///
+
+///...Translation (Python)...///
+
+    def __get_settings(self):
+        settings_input = raw_input("enter new settings like 'rows,columns,number_of_mines'")
+        return [int(x) for x in settings_input.split(',')]
+
+///
+
+The method get_move involves the OpenStruct data structure, and that peculiar "case" keyword again:
+
+///...Original (Ruby)...///
+
+  def get_move
+    print "Use i,j,k,l to steer the cursor. Space to explore. 'f' to flag."
+    command = get_char
+
+    move = OpenStruct.new
+    move.flag = false
+    case command
+    when ' '
+    when 'f'
+      move.flag = true
+    when 's'
+      File.open(SAVE_FILE, 'w').write(YAML::dump(@board))
+      return nil
+    when 'q'
+      @quit_requested = true
+      return nil
+    else
+      @board.move_cursor(command)
+      return nil
+    end
+
+    move.coordinates = @board.cursor_location
+    move
+  end
+
+///
+
+Since empty classes in Python behave like OpenStructs anyway, we'll just make OpenStruct an empty class (probably should have done this 
+at the beginning of the file):
+
+///...Translation (Python)...///
+
+    def __get_move(self):
+        print "Use i,j,k,l to steer the cursor. Space to explore. 'f' to flag."
+        command = self.__get_char()
+        
+        class OpenStruct:
+            pass
+        
+        move = OpenStruct()
+        move.flag = False
+        if command == ' ':
+            pass
+        elif command == 'f':
+            move.flag = True
+        elif command == 's':
+            open(save_file, 'w').write(yaml.dump(self.board))
+            return None
+        elif command == 'q':
+            self.quit_requested = True
+            return None
+        else:
+            self.board.move_cursor(command)
+            return None
+            
+        move.coordinates = self.board.cursor_location
+        return move
+        
+///
+
+The last two methods in this class are play and game_over:
+
+///...Original (Ruby)...///
+
+  def play
+    until game_over || @quit_requested do
+      @board.show
+      move = get_move
+      if move
+        if move.flag
+          @board.flag(move.coordinates)
+        else
+          @board.explore(move.coordinates)
+        end
+      end
+    end
+    @board.show
+  end
+
+  def game_over
+    if(@board.won?)
+      puts "good job"
+      true
+    elsif(@board.boom?)
+      puts "ouch"
+      true
+    else
+      false
+    end
+  end
+end
+
+///
+
+
+///...Translation (Python)...///
+
+    def __play(self):
+        while not (self.__game_over() or self.quit_requested):
+            self.board.show()
+            move = self.__get_move()
+            if move:
+                if move.flag:
+                   self.board.flag(move.coordinates)
+                else:
+                    self.board.explore(move.coordinates)
+        self.board.show()
+        
+    def __game_over(self):
+        # print "__game_over will do something"
+        if self.board.won():
+            print "good job"
+            return True
+        elif self.board.boom():
+            print "ouch"
+            return True
+        else:
+            return False
+
+///
+
+The next class is MineBoard:
+
+///...Original (Ruby)...///
+
+class MineBoard
+  attr_reader :cursor_location
+
+  def initialize(height, width, mine_count)
+    @height = height
+    @width = width
+    @mine_count = mine_count
+    @minefield = []
+    @cursor_location = [0,0]
+    populate_minefield
+  end
+
+///
+
+(Recall that "attr_reader" is necessary in Ruby in order to allow an instance variable to be accessed outside of a method.)
+
+///...Translation (Python)...///
+
+class MineBoard:
+
+    def __init__(self, height, width, mine_count):
+        self.height = height
+        self.width = width
+        self.mine_count = mine_count
+        self.minefield = []
+        self.cursor_location = [0,0]
+        self.__populate_minefield()
+
+///
+
+In the show method, we get among other things a lesson in the difference between Ruby's "print" and "puts".
+
+///...Original (Ruby)...///
+
+  def show
+    print "  "
+
+    puts col_indices
+    @minefield.each_with_index do |row, row_index|
+      index_string = row_index.to_s
+      spacer = index_string.length == 1? "  " : " "
+      print spacer, row_index, " "
+      row.each do |tile|
+        if tile.location == @cursor_location
+          print "\u2591 " # light shaded block
+        elsif tile.flag?
+          print "\u2691 " # flag icon
+        elsif tile.explored?
+          if tile.boom?
+            print "\u2622 " # radioactivity symbol
+          elsif tile.number != 0
+            print tile.number,  " "
+          elsif tile.number == 0
+            print "  "
+          end
+        else
+          print "\u25A0 " # filled-in square
+        end
+      end
+      print "\n"
+    end
+  end
+
+/// 
+
+
+Note that since Ruby does not require parentheses when invoking an argument-less function or method, determining whether
+something like col_indices is a (mere) variable or a method (or indeed a function) requires finding its definition, elsewhere in
+the file. I've been doing this all along, of course. (Although I will admit to having found it convenient, in certain cases, to 
+change a Ruby method to a Python variable...)
+
+(Also note the use of the ternary operator in the definition of the variable "spacer"; I tried to see if Python's "a if test else b"
+would work here, but got "Syntax Error: can't assign to conditional expression".)
+
+Thinking of using Python's "print" here? Think again. In Ruby, "print" prints multiple strings on the same line -- in contrast to
+"puts" and to Python's "print". If we want to get the same output, we need to circumlocute and create a compound string.
+
+///...Translation (Attempt?) (Python)...///
+
+    def show(self): # !
+        print "  "
+        
+        print self.__col_indices()
+        for row_index, row, in enumerate(self.minefield):
+            index_string = str(row_index)
+            if len(index_string) == 1:
+                spacer = "  "
+            else:
+                spacer = " "
+            print spacer, row_index, " ",
+            rowstring = u""
+            for tile in row:
+                if tile.location == self.cursor_location:
+                    rowstring = rowstring + u"\u2591 " #  light shaded block
+                elif tile.flag:
+                    rowstring = rowstring + u"\u2691 " # flag icon                    
+                elif tile.explored:
+                    if tile.boom():                    
+                        rowstring = rowstring + u"\u2622 " #  radioactivity symbol                        
+                    elif tile.number != 0:
+                        rowstring = rowstring + str(tile.number) + u" "
+                    elif tile.number == 0:
+                        rowstring = rowstring + u"  "
+                else:
+                    rowstring = rowstring + u"\u25A0 " #  filled-in square 
+            print rowstring              
+    
+
+///
+
+(Note the removal of the "print \n" at the end.) EDIT: Unfortunately, even though I dutifully prefixed the letter "u" to the strings
+(for "Unicode"), I have been unable to get the characters to print out correctly. So, for now, I have resorted to the following, in order to make the game playable (and thus testable) while I debug:
+
+///...Translation-Placeholder (Python)...///
+
+    def show(self): # !
+        print "  "
+        
+        print self.__col_indices()
+        for row_index, row, in enumerate(self.minefield):
+            index_string = str(row_index)
+            if len(index_string) == 1:
+                spacer = "  "
+            else:
+                spacer = " "
+            print spacer, row_index, " ",
+            rowstring = u""
+            for tile in row:
+                if tile.location == self.cursor_location:
+                    rowstring = rowstring + u"\u2591 " #  light shaded block
+                elif tile.flag:
+                    # rowstring = rowstring + u"\u2691 " # flag icon
+                    rowstring = rowstring + u"f "
+                # elif tile.mine:
+                    # rowstring = rowstring + u"m "
+                elif tile.explored:
+                    if tile.boom():                    
+                        # rowstring = rowstring + u"\u2622 " #  radioactivity symbol
+                        rowstring = rowstring + u"r "
+                    elif tile.number != 0:
+                        rowstring = rowstring + str(tile.number) + u" "
+                    elif tile.number == 0:
+                        rowstring = rowstring + u"  "
+                else:
+                    rowstring = rowstring + u"\u25A0 " #  filled-in square 
+            print rowstring                  
+            
+
+///
+
+(A commented exclamation point, # !, being my notation for such a situation, i.e. when I have temporarily changed the code from the original
+for debugging purposes.)
+
+EDIT: Also, originally I forgot to write "if tile.boom():" instead of "if tile.boom:", with perplexing results. Always remember when the 
+original is a method call!!!!
+
+In addition to the appearance of "case" again, the next method, move_cursor, is notable for the use of the copying method "dup":
+
+///...Original (Ruby)...///
+
+  def move_cursor(command_key)
+    new_location = @cursor_location.dup
+    case command_key
+    when 'i'
+      new_location[0] -= 1
+    when 'j'
+      new_location[1] -= 1
+    when 'k'
+      new_location[0] += 1
+    when 'l'
+      new_location[1] += 1
+    end
+    if self.in_bounds?(new_location)
+      @cursor_location = new_location
+    end
+  end
+
+///
+
+It may be recalled from Day 4 that Davis and Hass wrote a method called "deep_dup" as part of their exercises with the 
+Array class in Ruby; it returned an identical copy of an array. At the time, I didn't particularly appreciate the value
+of such a method (to be fair, I wasn't really thinking about the context of any of the methods in the file, and was just viewing
+them as snippets of Ruby code to be translated); indeed, for all I knew at the time, the name "deep_dup" was just a variant 
+of "derp_derp", i.e. a quasi-onomatopoetic reference to the futility of the procedure. However, the importance of copying as
+a functionality was pointed out in a comment on the Day 4 journal by none other than Zack Davis, which reminded me of a property
+of Python (and Ruby, and, I presume, other languages) that has tripped me up before and that I still haven't quite gotten used to,
+viz. that the following code:
+
+///Python or Ruby///
+
+A = [1,2,3]
+[1,2,3]
+B = A
+A[0] -= 1
+print B
+
+///  
+
+prints [0,2,3] instead of [1,2,3] -- in contrast to the following:
+
+///Python or Ruby///
+
+a = 1
+b = a
+a -= 1
+print b
+
+///
+
+which prints 1 (and not 0). In other words, that copying a list (array) cannot be done via assignment. Whence the (potential) need
+for a function like Davis and Hass's "deep_dup". 
+
+Of course, it turns out that both Ruby (as we have seen) and Python (as we shall see) come equipped with copying functions. (The meaning
+of "deep" finally occurred to me when I came across the contrasting term "shallow copy" in the [documentation](http://ruby-doc.org/core-1.9.3/Object.html#method-i-dup).)
+
+///...Translation (Python)...///
+
+    def move_cursor(self, command_key):
+        import copy
+        new_location = copy.copy(self.cursor_location)
+        if command_key == 'i':
+            new_location[0] -= 1
+        elif command_key == 'j':
+            new_location[1] -= 1
+        elif command_key == 'k':
+            new_location[0] += 1
+        elif command_key == 'l':
+            new_location[1] += 1
+        if self.in_bounds(new_location):
+            self.cursor_location = new_location
+            
+///
+
+(For some reason, it doesn't work to put the import command immediately before the method.)
+
+Among the next few items, note that in_bounds? uses Ruby's between? method:
+
+///...Original (Ruby)...///
+
+  def explore(coordinates)
+    @minefield[coordinates[0]][coordinates[1]].explore
+  end
+
+  def flag(coordinates)
+    @minefield[coordinates[0]][coordinates[1]].flag = !@minefield[coordinates[0]][coordinates[1]].flag
+  end
+
+  def find_tile(coordinates)
+    @minefield[coordinates[0]][coordinates[1]]
+  end
+
+  def in_bounds?(coordinates)
+    coordinates[0].between?(0, @height-1) and coordinates[1].between?(0, @width-1)
+  end
+
+///
+
+For purposes of translation, it's important to know that 5.between?(1,5) and 1.between?(1,5) are both true.
+
+///...Translation (Python)...///
+
+    def explore(self, coordinates):
+        self.minefield[coordinates[0]][coordinates[1]].explore()
+    
+    def flag(self, coordinates):
+        self.minefield[coordinates[0]][coordinates[1]].flag =  not self.minefield[coordinates[0]][coordinates[1]].flag
+    
+    def find_tile(self, coordinates):
+        return self.minefield[coordinates[0]][coordinates[1]]
+    
+    def in_bounds(self, coordinates):
+        return (coordinates[0] in range(0, self.height) and coordinates[1] in range(0, self.width))
+
+///
+
+The won? method contains some novelties:
+
+///...Original (Ruby)...///
+
+  def won?
+    mines = @minefield.flatten.select{ |tile| tile.mine? }
+    mines_flagged = mines.all?(&:flag?)
+    non_mines = @minefield.flatten.reject(&:mine?)
+    non_mines_explored = non_mines.all?(&:explored?)
+    mines_flagged && non_mines_explored
+  end
+
+///
+
+First we have the flatten method. This unpacks lists within a list, e.g. turning [1,2,3,[4,5,[6]]] into [1,2,3,4,5,6]. (By default, 
+it does so completely, i.e. at all levels of nesting, but one can specify a recursion level via an optional argument, to get, say,
+[1,2,3,4,5,[6]].) Unfortunately, Python does not come with such a thing, so we'll have to write it in; the following code comes from
+http://stackoverflow.com/questions/406121/flattening-a-shallow-list-in-python?lq=1 :
+
+///Python///
+
+def flatten(x):
+    result = []
+    for el in x:
+        if hasattr(el, "__iter__") and not isinstance(el, basestring):
+            result.extend(flatten(el))
+        else:
+            result.append(el)
+    return result
+
+///
+
+To practice working with code from separate files, we'll put the above in a file called flatten.py (in our Day_06 directory) and import it:
+
+///...Translation (Python)...///
+
+    def won(self):
+        from flatten import flatten
+        mines = [tile for tile in flatten(self.minefield) if tile.mine]
+        if mines == [x for x in mines if x.flag]:
+            mines_flagged = True
+        else:
+            mines_flagged = False
+        non_mines = [x for x in flatten(self.minefield) if not x.mine]
+        if non_mines == [x for x in non_mines if x.explored()]:
+            non_mines_explored = True
+        else:
+            non_mines_explored = False
+        return mines_flagged and non_mines_explored
+
+///
+
+The other novelties are the all? and reject? methods, whose meanings can be seen in the translation.
+The related any? shows up in boom?:
+
+///...Original (Ruby)...///
+
+  def boom?
+    mines = @minefield.flatten.select{ |tile| tile.mine? }
+    mines.any?(&:explored?)
+  end
+
+/// 
+
+
+///...Translation (Python)...///
+
+    def boom(self):
+        from flatten import flatten
+        mines = [tile for tile in flatten(self.minefield) if tile.mine]
+        for x in mines:
+            if x.explored:
+                return True
+        return False
+
+///
+
+The last two methods in the class are private:
+
+///...Original (Ruby)...///
+
+  private
+
+  def populate_minefield
+    mine_locations = []
+    until mine_locations.count == @mine_count do
+      candidate_location = [rand(0...@width), rand(0...@height)]
+      unless mine_locations.include?(candidate_location)
+        mine_locations.push(candidate_location)
+      end
+    end
+
+    (0...@height).each do |row|
+      @minefield << []
+      (0...@width).each do |col|
+        #put in mines
+        new_tile = Tile.new([row, col], self)
+        if(mine_locations.include?([row, col]))
+          new_tile.set_mine
+        end
+        @minefield[row] << new_tile
+      end
+    end
+  end
+
+  def col_indices
+    top = "  "
+    bottom = "    "
+    @width.times do |col_index|
+      if(col_index < 10)
+        top << "  "
+        bottom << "#{col_index} "
+      else
+        top << "#{col_index/10} "
+        bottom << "#{col_index %10} "
+      end
+    end
+    "#{top}\n#{bottom}"
+  end
+
+
+end
+
+///
+
+
+///...Translation (Python)...///
+
+    def __populate_minefield(self):
+        from random import randrange
+        mine_locations = []
+        while not len(mine_locations) == self.mine_count:
+            candidate_location = [randrange(0,self.width), randrange(0,self.height)]
+            if not candidate_location in mine_locations:
+                mine_locations.append(candidate_location)
+                
+        for row in range(self.height):
+            self.minefield.append([])
+            for col in range(self.width):
+            #put in mines
+                new_tile = Tile([row, col], self)
+                if [row, col] in mine_locations:
+                    new_tile.set_mine()
+                self.minefield[row].append(new_tile)
+
+   
+    def __col_indices(self):
+        top = "  "
+        bottom = "    "  
+        for col_index in range(self.width):
+            if col_index < 10:
+                top = top + "  "
+                bottom = bottom + "{0}".format(col_index)
+            else:
+                top = top + "{0}".format(col_index / 10)
+                bottom = bottom + "{0}".format(col_index % 10)
+        return "{0}\n{1}".format(top, bottom)                
+
+///
+ 
+(Note how we get around the immutability of strings in Python by using reassignment and the + operator.)
+
+
+Finally, the Tile class:
+
+///...Original (Ruby)...///
+
+class Tile
+
+  attr_accessor :flag
+  attr_reader :location, :number
+
+  def initialize(coordinates, board)
+    @location = coordinates
+    @board = board
+    @explored = false
+    @flag = false
+    @number = nil
+  end
+
+  def neighborhood
+    neighbors = []
+    (-1..1).each do |row_offset|
+      (-1..1).each do |col_offset|
+        next if row_offset == 0 and col_offset == 0
+        neighbor_coordinates = [self.location[0]+row_offset, self.location[1]+col_offset]
+        next unless @board.in_bounds?(neighbor_coordinates)
+        neighbors.push(@board.find_tile(neighbor_coordinates))
+      end
+    end
+    neighbors.compact
+  end
+
+  def explore
+    @explored = true
+    unless boom?
+      neighbors = neighborhood
+      @number = neighbors.select{|tile|tile.mine?}.count
+      if @number.zero?
+        unexplored_neighbors = neighbors.reject{ |tile| tile.explored? }
+        unexplored_neighbors.each(&:explore)
+      end
+
+    end
+
+  end
+
+///
+
+The main thing to note is Ruby's compact method, which gets rid of nil values. 
+
+///...Translation (Python)...///
+
+class Tile:
+
+    def __init__(self, coordinates, board):
+        self.location = coordinates
+        self.board = board
+        self.explored = False
+        self.flag = False
+        self.number = None
+        
+    def neighborhood(self):
+        neighbors = []
+        for row_offset in range(-1, 2):
+            for col_offset in range(-1, 2):
+                if row_offset == 0 and col_offset == 0:
+                    continue
+                neighbor_coordinates = [self.location[0]+row_offset, self.location[1]+col_offset]
+                if not self.board.in_bounds(neighbor_coordinates):
+                    continue
+                neighbors.append(self.board.find_tile(neighbor_coordinates))        
+        return [x for x in neighbors if x != None]
+        
+    def explore(self):
+        self.explored = True
+        if not self.boom():
+            neighbors = self.neighborhood()
+            self.number = len([tile for tile in neighbors if tile.mine])
+            if self.number == 0:
+                unexplored_neighbors = [tile for tile in neighbors if not tile.explored]
+                for tile in unexplored_neighbors:
+                    tile.explore()
+
+///
+
+Finally, of the last few methods, we only bother to translate set_mine and boom?, a literal translation of the rest being (to my mind) 
+an unnecessary complication in view of the fact that there existence seems to be due only to Ruby's unwillingness to let one access
+instance variables outside methods; instead, as you may have noticed (and as remarked upon previously) we have opted to invoke the
+variables directly themselves in translations above, rather than indirectly through namesake methods as in the manner of the original.
+
+///...Original (Ruby)///
+
+  def set_mine
+    @mine = true
+  end
+
+  def mine?
+    @mine
+  end
+
+  def boom?
+    @mine && @explored
+  end
+
+  def explored?
+    @explored
+  end
+
+  def flag?
+    @flag
+  end
+
+
+end
+
+Minesweeper.new
+
+///
+
+
+///...Translation (Python)///
+
+    def set_mine(self):
+        self.mine = True      
+        
+    def boom(self):
+        return (self.mine and self.explored)
+
+Minesweeper()
+///
+
+
+Seems to be working, modulo the Unicode issue.
+
+
+
+
+
+
+
+
+
+        
