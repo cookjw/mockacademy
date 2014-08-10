@@ -2,6 +2,8 @@
     #Divide digits by 3, find remainder
     #Determine appropriate magnitude (which -illion leads) (will go to decillions)
     #List descending magnitudes (...trillion, billion, million, thousand, ---), skipping "000"'s
+    
+#CURRENT STATUS: doesn't quite work, needs fixing.
 
 def name(magnitude):
     if magnitude == 0:
@@ -124,11 +126,13 @@ def spellout(n):
         number = number + ", " + x 
     return number
     
-print spellout(259123)   
+print "259123: " + spellout(259123)   
 
-print spellout(12345678909876543210) 
+print "12345678909876543210: " + spellout(12345678909876543210) 
 
-print spellout(100000000000001)
+print "100000000000001: " + spellout(100000000000001)
+
+print "1000:" + spellout(1000)
     
     
     
