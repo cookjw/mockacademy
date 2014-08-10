@@ -1,0 +1,5 @@
+# bytecode 
+*.pyc
+
+# Python 3 bytecode directories
+__pycache__
