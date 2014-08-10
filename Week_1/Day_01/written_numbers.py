@@ -3,7 +3,7 @@
     #Determine appropriate magnitude (which -illion leads) (will go to decillions)
     #List descending magnitudes (...trillion, billion, million, thousand, ---), skipping "000"'s
     
-#CURRENT STATUS: doesn't quite work, needs fixing.
+#CURRENT STATUS: improved, but will await unit testing before pronouncing further.
 
 def name(magnitude):
     if magnitude == 0:
@@ -34,6 +34,8 @@ def name(magnitude):
 def underthousand(n): #spelling out numbers under 1000, taken from my solution to Project Euler problem 17.
     num = str(n)
     if len(num) == 1:
+        if num == "0":
+            return "zero"
         if num == "1":
             return "one"
         if num == "2":
@@ -119,6 +121,9 @@ def spellout(n):
     segments = []    
     for k in range(magnitude):
         segments.append(revnum[3*k:3*k+3])
+    if num_digits % 3 != 0:
+        segments.append(revnum[3*magnitude:])
+    print "segments: " + str(segments)
     names = [underthousand(int(segments[i][::-1])) + " " + name(i) for i in range(len(segments)) if segments[i]!= "000"]
     revnames = names[::-1]
     number = revnames[0]
