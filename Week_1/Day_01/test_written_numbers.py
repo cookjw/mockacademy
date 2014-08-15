@@ -10,6 +10,9 @@ class WrittenNumbersTest(unittest.TestCase):
                          spellout(259123))
         # TODO: more assertions?!
 
+        
+if __name__ == '__main__':
+    unittest.main()        
 
 # zmd@ExpectedReturn:~/Code/Examination/mockacademy/Week_1/Day_01$
 # python -m unittest discover
@@ -31,3 +34,10 @@ class WrittenNumbersTest(unittest.TestCase):
 # Ran 1 test in 0.000s
 
 # FAILED (failures=1)
+
+# pytest version:
+
+# from written_numbers import spellout
+
+# def test_number():
+    # assert spellout(259123) == "two hundred and fifty nine thousand, one hundred and twenty three"

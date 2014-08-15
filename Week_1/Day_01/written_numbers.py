@@ -123,21 +123,25 @@ def spellout(n):
         segments.append(revnum[3*k:3*k+3])
     if num_digits % 3 != 0:
         segments.append(revnum[3*magnitude:])
-    print "segments: " + str(segments)
-    names = [underthousand(int(segments[i][::-1])) + " " + name(i) for i in range(len(segments)) if segments[i]!= "000"]
+    def space_ifnec(i):
+        if i == 0:
+            return ""
+        else:
+            return " "      
+    names = [underthousand(int(segments[i][::-1])) + space_ifnec(i) + name(i) for i in range(len(segments)) if segments[i]!= "000"]
     revnames = names[::-1]
     number = revnames[0]
     for x in revnames[1:]:
         number = number + ", " + x 
     return number
     
-print "259123: " + spellout(259123)   
+# print "259123: " + spellout(259123)   
 
-print "12345678909876543210: " + spellout(12345678909876543210) 
+# print "12345678909876543210: " + spellout(12345678909876543210) 
 
-print "100000000000001: " + spellout(100000000000001)
+# print "100000000000001: " + spellout(100000000000001)
 
-print "1000:" + spellout(1000)
+# print "1000:" + spellout(1000)
     
     
     
