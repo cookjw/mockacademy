@@ -14,7 +14,7 @@ class TemperatureConversionTest(unittest.TestCase):
         self.assertEqual(32, ctof(0))
         self.assertEqual(212, ctof(100))
         self.assertEqual(68, ctof(20))
-        self.assertEqual(98.6, ctof(37))
+        self.assertAlmostEqual(98.6, ctof(37))
         
         
 if __name__ == '__main__':
