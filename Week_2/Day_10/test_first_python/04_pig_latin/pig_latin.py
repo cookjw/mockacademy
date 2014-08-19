@@ -50,6 +50,9 @@ def translate(words):
             output = word[2:] + word[0:2] + 'ay'
         else:
             output = word[1:] + word[0] + 'ay' 
-        return leftpunctuation(word_with_punctuation) + checkcaps(output)  + rightpunctuation(word_with_punctuation)         
+        return leftpunctuation(word_with_punctuation) + checkcaps(output)  + rightpunctuation(word_with_punctuation)   
+
+
+        
             
             
