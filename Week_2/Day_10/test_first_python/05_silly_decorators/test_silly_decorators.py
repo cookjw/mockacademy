@@ -17,7 +17,7 @@ class SillyTest(unittest.TestCase):
 
     def test_adder(self):
         @adder
-        def five(number=0):
+        def five():
             return 5
         
         self.assertEqual(five(0), 5)

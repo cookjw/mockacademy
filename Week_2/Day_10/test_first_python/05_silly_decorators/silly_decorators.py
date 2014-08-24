@@ -1,24 +1,24 @@
 
 def reverser(function):
-    def wrapper(*args):
+    def argument_accessor(*args):
         outputlist = []
         for word in function(*args).split(' '):
             outputlist.append(word[::-1])
         return ' '.join(outputlist)
-    return wrapper
+    return argument_accessor
     
     
 def adder(function):
-    def wrapper(*args):
-        return function(*args) + sum([x for x in args])
-    return wrapper
+    def argument_accessor(number=0, *args):
+        return function(*args) + number
+    return argument_accessor
 
 
 def repeater(function):
-    def wrapper(times=1):        
+    def argument_accessor(times=1, *args):        
         for n in range(times):
-            function()        
-    return wrapper
+            function(*args)        
+    return argument_accessor
             
        
             
