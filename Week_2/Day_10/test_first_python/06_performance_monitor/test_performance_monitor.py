@@ -2,6 +2,7 @@ import unittest, datetime, mock, random, time
 from performance_monitor import measure
 
 ELEVEN_AM = time.mktime((datetime.datetime.strptime("2011-1-2 11:00:00", "%Y-%m-%d %H:%M:%S")).timetuple())
+# courtesy of http://stackoverflow.com/questions/8022161/python-converting-from-datetime-datetime-to-time-time
 
 faketime = ELEVEN_AM
 
