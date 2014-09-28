@@ -74,10 +74,7 @@ class RPNCalculatorTest(unittest.TestCase):
         self.assertEqual(self.calculator.evaluate("1 2 3 * +"), ((2 * 3) + 1))
         self.assertEqual(self.calculator.evaluate("4 5 -"), (4 - 5))
         self.assertEqual(self.calculator.evaluate("2 3 /"), (2.0 / 3.0))
-        self.assertEqual(self.calculator.evaluate("1 2 3 * + 4 5 - /"), (1.0 + (2 * 3)) / (4 - 5))
-        
-        
-        
+        self.assertEqual(self.calculator.evaluate("1 2 3 * + 4 5 - /"), (1.0 + (2 * 3)) / (4 - 5)) 
         
         
         
