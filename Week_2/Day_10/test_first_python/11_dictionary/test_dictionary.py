@@ -4,9 +4,6 @@ class DictionaryTest(unittest.TestCase):
     def setUp(self):
         self.d = dictionary.Dictionary()
         
-    # def tearDown(self):
-        # del d
-        
     def test_00_empty_when_created(self):
         self.assertEqual(self.d.entries, {})
         

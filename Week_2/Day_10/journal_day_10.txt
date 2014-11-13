@@ -1,0 +1,4283 @@
+Day 10
+---------
+
+
+I'm departing from the planned order and doing Day 10 "immediately" after Day 6. Mostly, this is because my plans for Days 7 and 8 require some tangential fiddling to make the original Ruby files work on my (Windows) computer, and I didn't want to do Day 9 until I had done Days 7 and 8 (which are really one day for my purposes, so I should be writing "Days-7-and-8"). (Why am I using Windows, you ask? Because that's what comes installed on laptops you buy at Walmart.) I do plan to do that tangential fiddling eventually, to show how clever and determined (and platform-knowledgeable) I am, but right now I'm more interested in not breaking my flow and continuing to keep myself entertained by learning novel, centrally-relevant topics. (Also, why be so boringly conventional and do everything in order, anyway? Why not avail myself of the unique advantages of working independently?)
+
+Day 10, in particular, involves a topic that is quite novel for me indeed: automated testing. Zack describes what this is about in his [Week 2 blog post](http://zackmdavis.net/blog/2013/09/app-academy-diary-week-two/):
+
+"Novice programmers test their programs by running them and seeing if they give the expected results, which might be okay when your program is small and no one actually uses it, but then what happens when you wake up one day and you're in charge of maintaining a twenty-thousand-line application that people really depend on?
+
+"Enter automated testing. By writing code to test code, developers can save time and be confident that recent changes haven't broken existing functionality! (At this point a pedant smugly inquires whether this implies the necessity of writing tests for the tests, and tests for the test-testing tests, and so on ad infinitum. This arguably doesn't deserve a reply, but is in any case easily answered by the observation that we expect tests to be much simpler than the code which is their subject; it takes less information to specify what is expected of a procedure than it does to specify the details of the procedure itself.) In *test-driven development*, the practice is actually to write the tests first."
+
+To learn more about this, I turned first to [this introductory talk by Carl Meyer](https://www.youtube.com/watch?v=ukm64IUANwE) from PyCon 2013, which is useful as a general introduction to automated testing in the Python context. He starts with the following example: 
+
+Suppose you'd like to create a "GitHub recommendation engine" -- a piece of software that will examine the GitHub repositories being followed by a particular user (say, you) and find additional repositories to recommend on the basis of their being followed by "similar" users. Suppose you define the "similarity score" between two users as the Jaccard index of their respective sets of followed repositories -- that is, the number of repositories they're both following, divided by the number of repositories that at least one of them is following. You might implement this naïvely as follows:
+
+/// Python: gitrecs.py ///
+
+def similarity(watched1, watched2):
+    """
+    Return similarity score for two users.
+    
+    Users represented as iterables of watched repo names.
+    
+    Score is Jaccard index (intersection / union).
+    
+    """
+    intersection = 0
+    for repo in watched1:
+        if repo in watched2:
+            intersection += 1
+    union = len(watched1) + len(watched2) - intersection
+    
+    return float(intersection) / float(union) # Meyer is using Python 3, so he doesn't have to write "float".
+
+///  
+
+As Zack suggested, a novice programmer like me would then "test" this code by running it in particular cases and seeing if it gave the expected results:
+
+/// Interactive Python Interpreter ///
+
+>>> similarity(['a', 'b'], ['b', 'c', 'd'])
+0.25
+
+>>> similarity(['a', 'b', 'c'], ['b', 'c', 'd'])
+0.5
+
+>>> similarity(['a', 'b', 'c'], ['d'])
+0.0
+
+/// 
+
+*Hopefully*, such a novice would remember to test a case like the following:
+
+/// ...Interactive Python Interpreter... ///
+
+>>> similarity(['a', 'a', 'b'], ['b'])
+0.3333333333333333
+
+///
+
+...because in it we see that the code does *not* in fact work as intended (the desired result here being 0.5). We therefore rewrite:
+
+/// Python: gitrecs.py ///  
+
+def similarity(watched1, watched2):
+    """
+    Return similarity score for two users.
+    
+    Users represented as iterables of watched repo names.
+    
+    Score is Jaccard index (intersection / union).
+    
+    """
+
+watched1, watched2 = set(watched1), set(watched2)
+intersection = watched1.intersection(watched2)
+union = watched1.union(watched2)
+
+return float(len(intersection)) / float(len(union))
+
+///
+
+...which fixes the bug:
+
+/// Interactive Python Interpreter ///
+
+>>> similarity(['a', 'a', 'b'], ['b'])
+0.5
+
+///
+
+Now, of course, we would need to rerun our "tests" to make sure we didn't break anything in the process of rewriting: 
+
+///...Interactive Python Interpreter...///
+
+>>> similarity(['a', 'b'], ['b', 'c', 'd'])
+0.25
+
+>>> similarity(['a', 'b', 'c'], ['b', 'c', 'd'])
+0.5
+
+>>> similarity(['a', 'b', 'c'], ['d'])
+0.0
+
+/// 
+
+Some people might consider this process *repetitive* and *boring*, not to mention *error-prone* (how carefully did you make sure that the three answers produced above were correct?). But the fact that those people are considering this process in the first place implies that they're programmers, so it should be no surprise that the thought occurred to some of them to *automate* it:
+
+
+/// Python: test_gitrecs.py ///
+
+from gitrecs import similarity
+
+assert similarity({}, {}) == 0.0
+assert similarity({'a', 'b'}, {'b', 'c', 'c'}) == 0.25
+assert similarity(['a', 'a'], ['a', 'b']) == 0.5
+
+/// 
+
+When we run this, we find another bug:
+
+/// Terminal Output ///
+
+Traceback (most recent call last):
+  File "c:\mystuff\python\mockacademy\week_2\day_10\test_gitrecs.py", line 5, in <module>
+    assert similarity({}, {}) == 0.0
+  File "c:\mystuff\python\mockacademy\week_2\day_10\gitrecs.py", line 36, in similarity
+    return float(len(intersection)) / float(len(union))
+ZeroDivisionError: float division by zero
+
+
+///
+
+...namely, our formula fails to handle empty sets correctly. 
+
+A problem with this approach is that the output ends once a test fails, and we don't get to see the results of subsequent tests. (Of course, the same is true of RSpec as far as I can tell, but never mind...). Here's another way:
+
+/// Python: test_gitrecs.py ///
+
+from gitrecs import similarity
+
+def test_empty():
+    assert similarity({}, {}) == 0.0
+
+def test_sets():
+    assert similarity({'a', 'b'}, {'b', 'c', 'd'}) == 0.25
+    
+def test_list_with_dupes():
+    assert similarity(['a', 'a'], ['a', 'b']) == 0.5
+    
+if __name__ == '__main__':
+    for func in test_empty, test_quarter, test_half:
+        try:
+            func()
+        except Exception as e:
+            print "{} FAILED: {}".format(func.__name__, e)
+        else:
+            print "{} passed.".format(func.__name__)
+
+
+///
+
+which gives:
+
+/// Terminal Output ///
+
+test_empty FAILED: division by zero
+test_sets passed.
+test_list_with_dupes passed
+
+///
+
+It turns out that there is a package called pytest which allows us to simply write the following:
+
+/// Python: test_gitrecs.py ///
+
+from gitrecs import similarity 
+
+def test_empty():
+    assert similarity({}, {}) == 0.0
+
+def test_sets():
+    assert similarity({'a', 'b'}, }'b', 'c', 'd'}) == 0.25
+    
+def test_list_with_dupes():
+    assert similarity(['a', 'a'], ['a', 'b']) == 0.5
+
+///
+
+which outputs:
+
+/// Terminal Output ///
+
+============================= test session starts =============================
+platform win32 -- Python 2.7.2 -- py-1.4.22 -- pytest-2.6.0
+collected 3 items
+
+test_gitrecs.py F..
+
+================================== FAILURES ===================================
+_________________________________ test_empty __________________________________
+
+    def test_empty():
+>       assert similarity({}, {}) == 0.0
+
+test_gitrecs.py:13:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+watched1 = set([]), watched2 = set([])
+
+    def similarity(watched1, watched2):
+        """
+        Return similarity score for two users.
+
+        Users represented as iterables of watched repo names.
+
+        Score is Jaccard index (intersection / union).
+
+        """
+
+        watched1, watched2 = set(watched1), set(watched2)
+        intersection = watched1.intersection(watched2)
+        union = watched1.union(watched2)
+
+>       return float(len(intersection)) / float(len(union))
+E       ZeroDivisionError: float division by zero
+
+gitrecs.py:36: ZeroDivisionError
+===================== 1 failed, 2 passed in 0.09 seconds ======================
+
+///
+
+Having discovered this bug, we can now fix it:
+
+/// Python: gitrecs.py ///
+
+def similarity(watched1, watched2):
+    """
+    Return similarity score for two users.
+    
+    Users represented as iterable of watched repos.
+    
+    Score is Jaccard index (intersection / union).
+    """
+    watched1, watched2 = set(watched1), set(watched2)
+    intersection = watched1.intersection(watched2)
+    union = watched1.union(watched2)
+    
+    if not union:
+        return 0.0
+    return float(len(intersection)) / float(len(union))
+
+///
+
+Now everything passes:
+
+/// Terminal Output ///
+
+============================= test session starts =============================
+platform win32 -- Python 2.7.2 -- py-1.4.22 -- pytest-2.6.0
+collected 3 items
+
+../../../../mystuff/python/mockacademy/week_2/day_10/test_gitrecs.py ...
+
+========================== 3 passed in 0.03 seconds ===========================
+
+///
+
+In addition to pytest, there are also other testing frameworks. In particular, the Python standard library comes equipped with one called unittest. It requires more boiler-plate code than pytest; here is a demonstration, based on Meyer's example:
+
+/// Python: test_gitrecs.py ///
+
+import unittest   
+from gitrecs import similarity
+
+class TestSimilarity(unittest.TestCase):
+    def test_empty(self):
+        score = similarity({}, {})
+        self.assertEqual(score, 0.0)
+        
+    def test_sets(self):
+        score = similarity({'a'}, {'a', 'b'})
+        self.assertEqual(score, 0.5)
+        
+    def test_list_with_dupes(self):
+        score = similarity(['a', 'a'], ['a', 'b'])
+        self.assertEqual(score, 0.5)
+        
+if __name__ == '__main__':
+    unittest.main()
+
+
+///
+
+
+Another demonstration of unittest was very kindly provided by Zack Davis; this is a test of my [program for spelling out numbers from Day 1](https://github.com/cookjw/mockacademy/blob/master/Week_1/Day_01/written_numbers.py):
+
+/// Python: test_written_numbers.py ///
+
+import unittest
+from written_numbers import spellout
+
+class WrittenNumbersTest(unittest.TestCase):
+
+    def test_can_write_numbers(self):
+        self.assertEqual("one thousand", spellout(1000))
+        self.assertEqual(("two hundred and fifty nine thousand, one hundred "
+                          "and twenty three"),
+                         spellout(259123))
+        # TODO: more assertions?!
+
+if __name__ == '__main__':
+    unittest.main()
+
+/// 
+
+(As in the previous example, the last two lines were added by me in order to make the file produce output; since neither Meyer nor Davis included them, I'm guessing there's some way that unittest tests can be run other than "python test_written_numbers.py" at the terminal.
+
+/// Terminal Output ///
+
+F
+======================================================================
+FAIL: test_can_write_numbers (__main__.WrittenNumbersTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_written_numbers.py", line 10, in test_can_write_numbers
+    spellout(259123))
+AssertionError: 'two hundred and fifty nine thousand, one hundred and twenty three' != 'two hundred and fifty nine thous
+and, one hundred and twenty three '
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)
+
+///
+
+So we find a "bug": the output of the program includes an extra space character at the end. This isn't something I cared about when I designed the program on Day 1, but I suppose we can go ahead and "fix" it. (I suppose this shows that unit testing makes one more exacting in one's programming standards...) Before we do so, however, let's see if I can write the same test using pytest:
+
+/// Python: test_written_numbers.py ///
+
+from written_numbers import spellout
+
+def test_number():
+    assert spellout(259123) == "two hundred and fifty nine thousand, one hundred and twenty three"
+
+///
+
+As output we get:
+
+/// Terminal Output ///
+
+============================= test session starts =============================
+platform win32 -- Python 2.7.2 -- py-1.4.22 -- pytest-2.6.0
+collected 1 items
+
+../../../../mystuff/python/mockacademy/week_1/day_01/test_written_numbers.py F
+
+================================== FAILURES ===================================
+_________________________________ test_number _________________________________
+
+    def test_number():
+>       assert spellout(259123) == "two hundred and fifty nine thousand, one hundred and twenty three"
+E       assert 'two hundred ...twenty three ' == 'two hundred a... twenty three'
+E         Skipping 54 identical leading characters in diff, use -v to show
+E         - wenty three
+E         ?            -
+E         + wenty three
+
+c:\mystuff\python\mockacademy\week_1\day_01\test_written_numbers.py:42: AssertionError
+========================== 1 failed in 0.41 seconds ===========================
+
+///
+
+This time using -v:
+
+/// Terminal Output ///
+
+============================= test session starts =============================
+platform win32 -- Python 2.7.2 -- py-1.4.22 -- pytest-2.6.0 -- c:\python27\python.exe
+collected 1 items
+
+..\..\..\..\mystuff\python\mockacademy\week_1\day_01\test_written_numbers.py@41::test_number FAILED
+
+================================== FAILURES ===================================
+_________________________________ test_number _________________________________
+
+    def test_number():
+>       assert spellout(259123) == "two hundred and fifty nine thousand, one hundred and twenty three"
+E       assert 'two hundred ...twenty three ' == 'two hundred a... twenty three'
+E         - two hundred and fifty nine thousand, one hundred and twenty three
+E         ?                                                                  -
+E         + two hundred and fifty nine thousand, one hundred and twenty three
+
+c:\mystuff\python\mockacademy\week_1\day_01\test_written_numbers.py:42: AssertionError
+========================== 1 failed in 0.06 seconds ===========================
+
+///
+
+I must admit that although pytest is easier to write, unittest has clearer (or at any rate cleaner) output, at least in a case like this. 
+
+So anyway, let's fix the "bug". We'll employ a "space if necessary" function, so that our new spellout function becomes:
+
+/// ...Python: written_numbers.py ... ///
+
+def spellout(n): 
+    num = str(n)    
+    num_digits = len(num)
+    magnitude = num_digits/3
+    revnum = num[::-1]
+    #gather three-digit segments into a list:
+    segments = []    
+    for k in range(magnitude):
+        segments.append(revnum[3*k:3*k+3])
+    if num_digits % 3 != 0:
+        segments.append(revnum[3*magnitude:])
+    def space_ifnec(i): # new fix
+        if i == 0:
+            return ""
+        else:
+            return " "       
+    names = [underthousand(int(segments[i][::-1])) + space_ifnec(i) + name(i) for i in range(len(segments)) if segments[i]!= "000"]
+    revnames = names[::-1]
+    number = revnames[0]
+    for x in revnames[1:]:
+        number = number + ", " + x 
+    return number
+
+///
+
+This passes our test (both pytest and unittest). 
+
+
+---------------------------
+
+I stumbled for a while over exactly what kind of small-scale exercises to do to practice unit testing in Python (before, say, attempting to write a poker game or similar as per Zack's diary post), but then discovered [Test First Ruby]() -- which is in fact itself part of the App Academy curriculum (it forms part of the application process/prepwork). So I went ahead and completed it, with the idea of translating both the tests (in RSpec, which constitute the problem statements) and my solutions (in Ruby) into Python, using unittest and/or pytest. Using all my powers of originality, I have dubbed this (sub)project "Test First Python". So here we go!
+
+Lesson 0: hello
+----------------
+
+/// Original Problem: hello_spec.rb (Ruby/RSpec) ///
+
+require "hello"
+
+describe "the hello function" do
+  it "says hello" do
+    hello.should == "Hello!"
+  end
+end
+
+describe "the greet function" do
+  it "says hello to someone" do
+    greet("Alice").should == "Hello, Alice!"
+  end
+
+  it "says hello to someone else" do
+    greet("Bob").should == "Hello, Bob!"
+  end
+end
+
+
+///
+
+This says: there should be two functions, hello and greet. The first is argumentless and returns the string "Hello!", and the second takes an argument which should be a string to use in forming a greeting of the specified form ("Hello, Alice!", "Hello, Bob!", etc.).
+
+/// Translated Problem: test_hello.py (Python/unittest) ///
+
+import unittest
+from hello import hello, greet
+
+class HelloTest(unittest.TestCase):
+    
+    def test_hello(self):
+        self.assertEqual("Hello!", hello()) 
+        
+    def test_greet(self):
+        self.assertEqual("Hello, Alice!", greet("Alice")) 
+        self.assertEqual("Hello, Bob!", greet("Bob")) 
+        
+if __name__ == '__main__':
+    unittest.main()     
+
+///
+
+The solution is simple enough, in both languages:
+
+/// Original Solution: hello.rb (Ruby) ///
+def hello
+  "Hello!"
+end
+
+def greet(who)
+  "Hello, #{who}!"
+end
+
+///
+
+/// Translated Solution: hello.py (Python) ///
+
+def hello():
+    return "Hello!"
+    
+def greet(who):
+    return "Hello, {0}!".format(who)
+
+///
+
+Sure enough, it passes. On to Lesson 1!
+
+Lesson 1: Temperature
+---------------------
+
+/// Original Problem: temperature_spec.rb (Ruby/RSpec) ///
+
+
+require "temperature"
+
+describe "temperature conversion functions" do
+
+  describe "#ftoc" do
+
+    it "converts freezing temperature" do
+      ftoc(32).should == 0
+    end
+
+    it "converts boiling temperature" do
+      ftoc(212).should == 100
+    end
+
+    it "converts body temperature" do
+      ftoc(98.6).should == 37
+    end
+
+    it "converts arbitrary temperature" do
+      ftoc(68).should == 20
+    end
+
+  end
+
+  describe "#ctof" do
+
+    it "converts freezing temperature" do
+      ctof(0).should == 32
+    end
+
+    it "converts boiling temperature" do
+      ctof(100).should == 212
+    end
+
+    it "converts arbitrary temperature" do
+      ctof(20).should == 68
+    end
+
+    it "converts body temperature" do
+      ctof(37).should be_within(0.1).of(98.6)
+      # Why do we need to use be_within?
+      # See http://www.ruby-forum.com/topic/169330
+      # and http://en.wikipedia.org/wiki/IEEE_754-2008
+      # and http://en.wikipedia.org/wiki/Double_precision_floating-point_format
+      # Also, try "puts 0.5 - 0.4 - 0.1" -- pretty crazy, right?
+    end
+
+  end
+
+end
+
+
+///
+
+This asks for two functions: a Fahrenheit-to-Celsius converter (ftoc), and a Celsius-to-Fahrenheit converter (ctof). 
+The bizarre behavior of e.g. "puts 0.5 -0.4 - 0.1" in Ruby occurs in Python as well; so we'll use a unittest equivalent(?) of be_within,
+namely assertAlmostEqual:
+
+
+/// Translated Problem: test_temperature.py (Python/unittest) ///
+
+import unittest
+from temperature import ftoc, ctof
+
+
+class TemperatureConversionTest(unittest.TestCase):
+    
+    def F_to_C_conversions(self):
+        self.assertEqual(0, ftoc(32))
+        self.assertEqual(100, ftoc(212))
+        self.assertEqual(37, ftoc(98.6))
+        self.assertEqual(20, ftoc(68))
+        
+    def C_to_F_conversions(self):
+        self.assertEqual(32, ctof(0))
+        self.assertEqual(212, ctof(100))
+        self.assertEqual(68, ctof(20))
+        self.assertAlmostEqual(98.6, ctof(37))
+        
+        
+if __name__ == '__main__':
+    unittest.main()   
+
+///
+
+
+The solution is simple (provided we remember to write n.0 instead of n), and simple to translate:
+
+/// Original Solution: temperature.rb (Ruby) ///
+
+def ftoc(f_temp)
+  c_temp = 5.0/9.0 * (f_temp - 32)
+  c_temp
+end
+
+def ctof(c_temp)
+  f_temp = 9.0/5.0 * (c_temp) + 32
+  f_temp
+end
+
+
+///
+
+
+/// Translated Solution: temperature.py (Python) ///
+
+
+def ftoc(f_temp):
+    c_temp = 5.0/9.0 * (f_temp - 32)
+    return c_temp
+    
+def ctof(c_temp):
+    f_temp = 9.0/5.0 * (c_temp) + 32
+    return f_temp
+
+///
+
+The tests pass! Next lesson.
+
+
+Lesson 2: Calculator
+--------------------
+
+/// Original Problem: calculator_spec.rb (Ruby/RSpec) ///
+
+
+require "calculator"
+
+describe "add" do
+  it "adds 0 and 0" do
+    add(0,0).should == 0
+  end
+
+  it "adds 2 and 2" do
+    add(2,2).should == 4
+  end
+
+  it "adds positive numbers" do
+    add(2,6).should == 8
+  end
+end
+
+describe "subtract" do
+  it "subtracts numbers" do
+    subtract(10,4).should == 6
+  end
+end
+
+describe "sum" do
+  it "computes the sum of an empty array" do
+    sum([]).should == 0
+  end
+
+  it "computes the sum of an array of one number" do
+    sum([7]).should == 7
+  end
+
+  it "computes the sum of an array of two numbers" do
+    sum([7,11]).should == 18
+  end
+
+  it "computes the sum of an array of many numbers" do
+    sum([1,3,5,7,9]).should == 25
+  end
+end
+
+# Extra Credit Test-Driving Bonus:
+# once the above tests pass,
+# write tests and code for the following:
+
+describe "#multiply" do
+
+  it "multiplies two numbers" do
+    multiply(3,4).should == 12
+    
+  end
+
+  it "multiplies several numbers" do
+    multiply(3,4,5). should == 60
+  end
+
+end
+
+describe "#power" do
+  it "raises one number to the power of another number" do
+    power(3,4).should == 81
+  end
+end
+
+
+describe "#factorial" do
+  it "computes the factorial of 0" do
+    factorial(0).should == 1
+  end
+  it "computes the factorial of 1" do
+    factorial(1).should == 1
+  end
+  it "computes the factorial of 2" do
+    factorial(2).should == 2
+  end
+  it "computes the factorial of 5" do
+    factorial(5).should == 5*4*3*2*1
+  end
+  it "computes the factorial of 10" do
+    factorial(10).should == 10*9*8*7*6*factorial(5)
+  end
+end
+
+
+///
+
+In the case of sum and multiply, I'm going to do something very slightly different, and practice using Python's ability to define
+functions that accept variable numbers of arguments (this is almost literally the same thing as taking a list as an argument, since
+it is implemented by putting the arguments into a list):
+
+
+/// Translated Problem: test_calculator.py (Python/unittest) ///
+
+import unittest
+from calculator import add, subtract, sum, multiply, power, factorial
+
+class CalculatorTest(unittest.TestCase):
+    def test_add(self):
+        self.assertEqual(add(0,0), 0)   
+        self.assertEqual(add(2,2), 4)
+        self.assertEqual(add(2,6), 8)
+                
+    
+    def test_subtract(self):
+        self.assertEqual(subtract(10,4), 6)
+    
+    def test_sum(self):
+        self.assertEqual(sum(), 0)
+        self.assertEqual(sum(7), 7)
+        self.assertEqual(sum(7,11), 18)
+        self.assertEqual(sum(1,3,5,7,9), 25)
+    
+    def test_multiply(self):
+        self.assertEqual(multiply(3,4), 12)
+        self.assertEqual(multiply(3,4,5), 60)
+    
+    def test_power(self):   
+        self.assertEqual(power(3,4), 81)    
+    
+    def test_factorial(self):
+        self.assertEqual(factorial(0), 1)
+        self.assertEqual(factorial(1), 1)
+        self.assertEqual(factorial(2), 2)
+        self.assertEqual(factorial(5), 5*4*3*2*1)
+        self.assertEqual(factorial(10), 10*9*8*7*6*5*4*3*2*1)
+    
+    
+if __name__ == '__main__':
+    unittest.main() 
+    
+
+///
+
+The solution in Ruby:
+
+/// Original Solution: calculator.rb (Ruby) ///
+
+def add(x, y)
+  x + y
+end
+
+def subtract(x, y)
+  x - y
+end
+
+def sum(array)
+  total = 0
+  for n in array
+    total = total + n
+  end
+  total
+end
+
+def multiply(*list)
+  product = 1
+  for n in 0...list.length
+    product = product * list[n]
+  end
+  product
+end
+
+def power(x, y)
+  x ** y
+end
+
+def factorial(n)
+  if n == 0
+    return 1
+   
+  else
+    return n * factorial(n-1)
+  end
+
+end
+
+
+///
+
+...and in Python:
+
+/// Translated Solution: calculator.py (Python) ///
+
+def add(x, y):
+    return x + y
+    
+def subtract(x, y):
+    return x - y
+    
+def sum(*array):
+    total = 0
+    for n in array:
+        total = total + n
+    return total
+
+def multiply(*list):
+    product = 1
+    for n in list:
+        product = product*n
+    return product
+    
+def power(x, y):
+    return x**y
+    
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+
+///
+
+Success! On to Lesson 3:
+
+Lesson 3: Simon Says
+---------------------
+
+/// Original Problem: simon_says_spec.rb (Ruby/RSpec) ///
+
+
+require "simon_says"
+
+describe "Simon says" do
+  describe "echo" do
+    it "should echo hello" do
+      echo("hello").should == "hello"
+    end
+
+    it "should echo bye" do
+      echo("bye").should == "bye"
+    end
+  end
+
+  describe "shout" do
+    it "should shout hello" do
+      shout("hello").should == "HELLO"
+    end
+
+    it "should shout multiple words" do
+      shout("hello world").should == "HELLO WORLD"
+    end
+  end
+
+  describe "repeat" do
+    it "should repeat" do
+      repeat("hello").should == "hello hello"
+    end
+
+    # Wait a second! How can you make the "repeat" method
+    # take one *or* two arguments?
+    #
+    # Hint: *default values*
+    it "should repeat a number of times" do
+      repeat("hello", 3).should == "hello hello hello"
+    end
+  end
+
+  describe "start_of_word" do
+    it "returns the first letter" do
+      start_of_word("hello", 1).should == "h"
+    end
+
+    it "returns the first two letters" do
+      start_of_word("Bob", 2).should == "Bo"
+    end
+
+    it "returns the first several letters" do
+      s = "abcdefg"
+      start_of_word(s, 1).should == "a"
+      start_of_word(s, 2).should == "ab"
+      start_of_word(s, 3).should == "abc"
+    end
+  end
+
+  describe "first_word" do
+    it "tells us the first word of 'Hello World' is 'Hello'" do
+      first_word("Hello World").should == "Hello"
+    end
+
+    it "tells us the first word of 'oh dear' is 'oh'" do
+      first_word("oh dear").should == "oh"
+    end
+  end
+
+  describe "titleize" do
+    it "capitalizes a word" do
+      titleize("jaws").should == "Jaws"
+    end
+
+    it "capitalizes every word (aka title case)" do
+      titleize("david copperfield").should == "David Copperfield"
+    end
+
+    it "doesn't capitalize 'little words' in a title" do
+      titleize("war and peace").should == "War and Peace"
+    end
+
+    it "does capitalize 'little words' at the start of a title" do
+      titleize("the bridge over the river kwai").should == "The Bridge over the River Kwai"
+    end
+  end
+
+end
+
+///
+
+
+/// Translated Problem: test_simon_says.py (Python/unittest) ///
+
+import unittest
+from simon_says import echo, shout, repeat, start_of_word, first_word, titleize
+
+class SimonTest(unittest.TestCase):
+    def test_echo(self):
+        self.assertEqual(echo("hello"), "hello")
+        self.assertEqual(echo("bye"), "bye")
+        
+    def test_shout(self):
+        self.assertEqual(shout("hello"), "HELLO")
+        self.assertEqual(shout("hello world"), "HELLO WORLD")
+        
+    def test_repeat(self):
+        self.assertEqual(repeat("hello"), "hello hello")
+        self.assertEqual(repeat("hello", 3), "hello hello hello")
+        
+    def test_start_of_word(self):
+        self.assertEqual(start_of_word("hello", 1), "h")
+        self.assertEqual(start_of_word("Bob", 2), "Bo")
+        s = "abcdefg"
+        self.assertEqual(start_of_word(s, 1), "a")
+        self.assertEqual(start_of_word(s, 2), "ab")
+        self.assertEqual(start_of_word(s, 3), "abc")
+        
+    def test_first_word(self):
+        self.assertEqual(first_word("Hello World"), "Hello")
+        self.assertEqual(first_word("oh dear"), "oh")
+        
+    def test_titelize(self):
+        self.assertEqual(titleize("jaws"), "Jaws")
+        self.assertEqual(titleize("david copperfield"), "David Copperfield")
+        self.assertEqual(titleize("war and peace"), "War and Peace")
+        self.assertEqual(titleize("the bridge over the river kwai"), "The Bridge over the River Kwai")
+
+
+if __name__ == '__main__':
+    unittest.main()   
+
+///
+
+
+/// Original Solution: simon_says.rb (Ruby) ///
+
+def echo(input)
+  input
+end
+
+def shout(input)
+  input.upcase
+end
+
+def repeat(input, times=2)
+  n = times
+  output = input
+  while n > 1
+    output = output + " " + input    
+    n = n - 1
+  end
+  output
+end
+
+def start_of_word(word, number=1)
+  word[0...number]
+end
+
+def first_word(string)
+  string.split(' ')[0]
+end
+
+def titleize(title)
+  smallwords = ["and", "the", "in", "an", "or", "at", "of", "a", "over"] #list not comprehensive, but what am I to do...?
+  titlewords = title.split(' ')
+  newtitlewords = []
+  for index in (0...titlewords.length)
+    word = titlewords[index]
+    unless (smallwords.include?(word) and index != 0)
+      new_word = word.capitalize      
+      newtitlewords << new_word
+    else
+      newtitlewords << word
+    end  
+  end
+  newtitle = newtitlewords.join(' ')
+  return newtitle  
+end
+
+///
+
+
+/// Translated Solution: simon_says.py (Python) ///
+
+def echo(input):
+    return input
+    
+def shout(input):
+    return input.upper()
+    
+def repeat(input, times=2):
+    n = times
+    output = input
+    while n > 1:
+        output = output + " " + input
+        n = n - 1
+    return output
+
+def start_of_word(word, number=1):
+    return word[0:number]
+
+def first_word(string):
+    return string.split(" ")[0]
+
+def titleize(title):
+    smallwords = ["and", "the", "in", "an", "or", "at", "of", "a", "over"] #list not comprehensive, but what am I to do...?
+    titlewords = title.split(' ')
+    newtitlewords = []
+    for index in range(len(titlewords)):
+        word = titlewords[index]
+        if not (word in smallwords and index != 0):
+            new_word = word.capitalize()
+            newtitlewords.append(new_word)
+        else:
+            newtitlewords.append(word)
+    newtitle = ' '.join(newtitlewords)
+    return newtitle
+        
+
+///
+
+Success!
+
+Lesson 4: Pig Latin
+--------------------
+
+/// Original Problem: pig_latin_spec.rb (Ruby/RSpec) ///
+
+require "pig_latin"
+
+describe "#translate" do
+
+  it "translates a word beginning with a vowel" do
+    s = translate("apple")
+    s.should == "appleay"
+  end
+
+  it "translates a word beginning with a consonant" do
+    s = translate("banana")
+    s.should == "ananabay"
+  end
+
+  it "translates a word beginning with two consonants" do
+    s = translate("cherry")
+    s.should == "errychay"
+  end
+
+  it "translates two words" do
+    s = translate("eat pie")
+    s.should == "eatay iepay"
+  end
+
+  it "translates a word beginning with three consonants" do
+    translate("three").should == "eethray"
+  end
+
+  it "counts 'sch' as a single phoneme" do
+    s = translate("school")
+    s.should == "oolschay"
+  end
+
+  it "counts 'qu' as a single phoneme" do
+    s = translate("quiet")
+    s.should == "ietquay"
+  end
+
+  it "counts 'qu' as a consonant even when it's preceded by a consonant" do
+    s = translate("square")
+    s.should == "aresquay"
+  end
+
+  it "translates many words" do
+    s = translate("the quick brown fox")
+    s.should == "ethay ickquay ownbray oxfay"
+  end
+  
+  it "capitalizes words that are capitalized" do
+    s = translate("the quick brown Fox")
+    s.should == "ethay ickquay ownbray Oxfay"  
+  end
+  
+  it "retains punctuation" do
+    s = translate("the quick, brown...Fox!")
+    s.should == "ethay ickquay, ownbray...Oxfay!"
+  end
+
+end
+///
+
+/// Translated Problem: test_pig_latin.py (Python/unittest) ///
+
+import unittest
+from pig_latin import translate
+
+class PigLatinTest(unittest.TestCase):
+    def test_translate(self):
+        self.assertEqual(translate("apple"), "appleay")
+        self.assertEqual(translate("banana"),"ananabay")
+        self.assertEqual(translate("cherry"),"errychay")
+        self.assertEqual(translate("eat pie"), "eatay iepay")
+        self.assertEqual(translate("three"),"eethray")
+        self.assertEqual(translate("school"),"oolschay")
+        self.assertEqual(translate("quiet"), "ietquay")
+        self.assertEqual(translate("square"), "aresquay")
+        self.assertEqual(translate("the quick brown fox"),"ethay ickquay ownbray oxfay")
+        self.assertEqual(translate("the quick brown Fox"), ("ethay ickquay ownbray Oxfay"))
+        self.assertEqual(translate("the quick, brown...Fox!"), ("ethay ickquay, ownbray...Oxfay!"))
+        
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+
+
+/// Original Solution: pig_latin.rb (Ruby) ///
+
+def translate(words)
+  def checkcaps(word)
+    if word.split('').select {|x| x == x.upcase()} != []
+      return word.capitalize
+    else
+      return word
+    end
+  end
+  if words.split(' ').length > 1
+    translist = []
+    for word in words.split(' ')
+      translist << translate(word)      
+    end
+    return translist.join(' ')
+  elsif words.include?("...")
+    translist = words.split("...").map {|x| translate(x)} 
+    return translist.join('...')
+  else
+    word = words
+    def rightpunctuation(word)
+      if word != "..." and [".", "?", "!", ",", ";", "--", "\"", "\'", ")"].include?(word[-1])
+        return word[-1]
+      else
+        return ""            
+      end
+    end
+    def leftpunctuation(word)
+      if ["\"", "(", "\'"].include?(word[0])
+        return word[0]
+      else
+        return ""      
+      end
+    end
+    def chop_punctuation(word)
+      if rightpunctuation(word) != ""
+        return chop_punctuation(word[0...-1])
+      elsif leftpunctuation(word) != ""
+        return chop_punctuation(word[1..-1])
+      else
+        return word
+      end    
+    end
+    
+    word_with_punctuation = word
+    word = chop_punctuation(word)
+    vowels = ['a', 'e', 'i', 'o', 'u']
+    if vowels.include?(word[0])
+      output = word + 'ay'
+    elsif word[0..1] == 'ch'
+      output = word[2..-1] + 'ch' + 'ay' 
+    elsif word[0..1] == 'qu'
+      output = word[2..-1] + 'qu' + 'ay'    
+    elsif not vowels.include?(word[0]) and not vowels.include?(word[1]) and not vowels.include?(word[2]) 
+      output = word[3..-1] + word[0..2] + 'ay'    
+    elsif (not vowels.include?(word[0])) and word[1..2] == "qu"
+      output = word[3..-1] + word[0..2] + 'ay'  
+    elsif not vowels.include?(word[0]) and not vowels.include?(word[1])
+      output = word[2..-1] + word[0..1] + 'ay'      
+    else
+      output = word[1..-1] + word[0] + 'ay'
+    end
+    return leftpunctuation(word_with_punctuation) + checkcaps(output)  + rightpunctuation(word_with_punctuation)  
+  end
+end
+
+///
+
+
+/// Translated Solution: pig_latin.py (Python) ///
+
+def translate(words):
+    def checkcaps(word):
+        if [letter for letter in word if letter == letter.upper()] != []:
+            return word.capitalize()
+        else:
+            return word
+            
+    if len(words.split(' ')) > 1:
+        translist = []
+        for word in words.split(' '):
+            translist.append(translate(word))
+        return ' '.join(translist)
+    elif "..." in words:
+        translist = [translate(word) for word in words.split('...')]
+        return '...'.join(translist)             
+    else:
+        word = words
+        def rightpunctuation(word):
+            if word != "..." and word[-1] in [".", "?", "!", ",", ";", "--", "\"", "\'", ")"]:
+                return word[-1]
+            else:
+                return ""
+        def leftpunctuation(word):
+            if word[0] in ["\"", "(", "\'"]:
+                return word[0]
+            else:
+                return ""            
+        def chop_punctuation(word):
+            if rightpunctuation(word) != "":
+                return chop_punctuation(word[:-1])
+            elif leftpunctuation(word) != "":
+                return chop_punctuation(word[1:])
+            else:
+                return word
+         
+        word_with_punctuation = word
+        word = chop_punctuation(word)            
+        vowels = ['a', 'e', 'i', 'o', 'u']
+        if word[0] in vowels:
+            output = word + 'ay'
+        elif word[0:2] == "ch":
+            output = word[2:] + 'ch' + 'ay'
+        elif word[0:2] == 'qu':
+            output = word[2:] + 'qu' + 'ay'
+        elif not (word[0] in vowels) and not (word[1] in vowels) and not (word[2] in vowels):
+            output = word[3:] + word[0:3] + 'ay'
+        elif (not (word[0] in vowels)) and word[1:3] == "qu":
+            output = word[3:] + word[0:3] + 'ay'
+        elif not (word[0] in vowels) and not (word[1] in vowels):
+            output = word[2:] + word[0:2] + 'ay'
+        else:
+            output = word[1:] + word[0] + 'ay' 
+        return leftpunctuation(word_with_punctuation) + checkcaps(output)  + rightpunctuation(word_with_punctuation)   
+
+///
+
+
+Lesson 5: Silly Blocks/Decorators
+---------------------------------
+
+This was the most challenging and informative of the exercises so far. It involves the concept of a Ruby *block*,
+which does not exist in Python. In order to do a "translation" (perhaps "paraphrase" would be a better word in this case), 
+it was necessary to find some sort of similarly problematic analogous language feature or technique that could be used
+to produce similar results. For that purpose I ended up discovering the notion of *decorators* (which I had previously mentioned
+as something I had heard about but was not yet familiar with). 
+
+So what is a block, then? Essentially, it is an anonymous function designed to serve as an argument for some other function (technically all 
+functions in Ruby are methods, but for present purposes we will regard this as an implementation detail). Unlike Python, Ruby does not *appear* to allow functions
+to be accepted as arguments directly -- for example, the following will produce an error:
+
+/// Erroneous Code (Ruby) ///
+
+def apply(function, argument)
+  function(argument)
+end
+
+def square(number)
+  number*number
+end
+
+puts apply(square, 3)
+
+///  
+
+However, it turns out that there is a way to do this, because Ruby functions (methods) can (always?) be made to accept an anonymous function (a.k.a. "lambda", as in
+Church's lambda calculus; in Ruby written {|x| f(x)} or do |x| f(x) end and called a "block") as an optional argument, by using the yield keyword:
+
+/// Ruby ///
+
+def apply(argument) 
+  yield(argument) # 'yield' refers to the hidden optional anonymous-function argument of apply
+end
+
+def square(number)
+  number*number
+end
+
+puts apply(3) {|x| square(x)} # will output 9.
+
+///
+
+A consequence of this is the ability to, in effect, change the definition of a function:
+
+///...Ruby  ///
+
+def modified_apply(argument)
+  yield(argument)*argument
+end
+
+puts modified_apply(3) {|x| square(x)} # "square" means "cube" now...
+
+///
+
+Now let's switch to Python. We have no trouble doing this:
+
+/// Python ///
+
+def apply(function, argument):
+    return function(argument)
+
+def square(number):
+    return number*number
+    
+print apply(square, 3) # will output 9
+
+///
+
+...or indeed this:
+
+///...Python ///
+
+def modified_apply(function, argument)
+    return function(argument)*argument
+    
+print modified_apply(square, 3) # cubing is the new squaring...
+
+///
+
+But there's also another way -- *decorators*. It looks like this:
+
+/// Python ///
+
+def modify(function):
+    def argument_accessor(argument):
+        return function(argument)*argument
+    return argument_accessor
+    
+@modify #instead of this, we could have written square = modify(square) after the definition of square
+def square(number):
+    return number*number
+
+print square(3) # meaning "cube", of course... 
+
+///
+
+The function modify here is what is known as a "decorator"; I'm assuming this is because in writing @modify above the definition
+of square we would be said to "decorate" the latter -- or something like that. Anyway, this is the technique we will be practicing 
+(and, in particular, practicing writing tests for) in this lesson.
+
+The original problem, then, begins as follows:
+
+/// Original Problem: silly_blocks_spec.rb (Ruby/RSpec) ///
+
+require "silly_blocks"
+
+describe "some silly block functions" do
+
+  describe "reverser" do
+    it "reverses the string returned by the default block" do
+      result = reverser do
+        "hello"
+      end
+      result.should == "olleh"
+    end
+
+    it "reverses each word in the string returned by the default block" do
+      result = reverser do
+        "hello dolly"
+      end
+      result.should == "olleh yllod"
+    end
+  end
+  
+///
+
+Note that "the default block" is the term for this optional block that any method can be made to accept via the yield keyword.
+The method reverser that is being asked for is one that will reverse the (string) output of the function (block) to which it
+is being applied. However, the conceptual point here is that reverser acts on *functions* (by doing something to their outputs), 
+not on the outputs directly. 
+
+In our Python paraphrase, we will specify a reverser decorator that will do the same thing; the only real difference being that decorators, 
+by their nature, operate on named functions rather than anonymous ones:
+
+/// Paraphrased Problem: test_silly_decorators.py (Python/unittest) ///
+
+import unittest
+from silly_decorators import reverser, adder, repeater
+
+
+class SillyTest(unittest.TestCase):
+    def test_reverser(self):
+        @reverser
+        def hello(name=""):
+            if name == "":
+                return "hello"
+            else:
+                return "hello" + " " + name            
+        
+        self.assertEqual(hello(), "olleh")
+        self.assertEqual(hello("dolly"), "olleh yllod")
+        
+///
+
+Solution in Ruby:
+
+/// Original Solution (Ruby): ///
+
+def reverser
+  outputlist = []
+  for word in yield.split(' ')
+    outputlist << word.reverse
+  end
+  outputlist.join(' ')
+end
+
+///
+
+Subtlety note: yield actually *calls* the default block, rather than simply referring to it; i.e. writing yield is the
+same as writing yield(). (This is why yield.split makes sense.)
+
+In Python:
+
+/// Paraphrased Solution (Python) ///
+
+def reverser(function):
+    def argument_accessor(*args):
+        outputlist = []
+        for word in function(*args).split(' '):
+            outputlist.append(word[::-1])
+        return ' '.join(outputlist)
+    return argument_accessor
+    
+///    
+
+Note that we write *args (allowing the number of arguments to vary) because we want to be able to decorate functions of any number
+of arguments (including those with optional arguments or variable numbers of arguments themselves). (The arguments of argument_accessor 
+are those that will be taken by the new version of the function after the decorator has been applied to it, whereas the arguments of function 
+are those of the original function pre-decrator; these need not be the same, as the next example will show.) 
+
+      
+
+Moving on to the next specification:
+  
+///...Original Problem: silly_blocks_spec.rb (Ruby/RSpec)...///
+  
+  describe "adder" do
+    it "adds one to the value returned by the default block" do
+      adder do
+        5
+      end.should == 6
+    end
+
+    it "adds 3 to the value returned by the default block" do
+      adder(3) do
+        5
+      end.should == 8
+    end
+  end
+  
+/// 
+
+Here, in standard mathematical terms, the method adder is like an operator that takes a function f (i.e.(x |-> f(x))) and sends it to f + 1
+(i.e. to (x |-> f(x) + 1)), as opposed to one that takes a number x and sends it to x + 1. It's being tested on the constant function 
+f = (x |-> 5). More generally, adder(y) is like the operator ((x |-> f(x)) |-> (x |-> f(x) + y)).
+
+In Python, we (will) [correspondingly] have: 
+
+///...Paraphrased Problem: test_silly_decorators.py (Python/unittest)...///        
+
+    def test_adder(self):
+        @adder
+        def five():
+            return 5
+        
+        self.assertEqual(five(0), 5)
+        self.assertEqual(five(3), 8)      
+
+///
+
+Here, the number to be added to the value returned by the function appears as an argument of the function itself rather than of adder; 
+otherwise, the idea is basically the same, but the important thing to note is that our decorator, adder, has increased the number of arguments of the
+original function (five) by one. 
+
+The solution in Ruby:
+
+///...Original Solution (Ruby)...///
+
+def adder(number=1)
+  yield + number
+end
+
+///
+
+...and in Python:
+
+///...Paraphrased Solution (Python)...///
+
+def adder(function):
+    def argument_accessor(number=0, *args):
+        return function(*args) + number
+    return argument_accessor
+
+
+///
+
+The third specification is the trickiest to convert:
+  
+///...Original Problem: silly_blocks_spec.rb (Ruby/RSpec)...///  
+
+  describe "repeater" do
+    it "executes the default block" do
+      block_was_executed = false
+      repeater do
+        block_was_executed = true
+      end
+      block_was_executed.should == true
+    end
+
+    it "executes the default block 3 times" do
+      n = 0
+      repeater(3) do
+        n += 1
+      end
+      n.should == 3
+    end
+
+    it "executes the default block 10 times" do
+      n = 0
+      repeater(10) do
+        n += 1
+      end
+      n.should == 10
+    end
+
+  end
+
+end
+
+///
+
+So, applying repeater(n) to the block should execute the block n times; and applying repeater, with no argument,
+should be the same as applying repeater(1). In Python, then, we will say that decorating with @repeater should equip
+the function with an additional argument which specifies how many times it is to be repeated:
+
+///...Paraphrased Problem: test_silly_decorators.py (Python/unittest)...///
+
+    def test_repeater(self):
+        stuff_was_executed = [False] # hack courtesy of http://stackoverflow.com/questions/291978/short-description-of-python-scoping-rules?rq=1
+        @repeater
+        def execute():
+            stuff_was_executed[0] = True           
+            
+        execute()         
+        self.assertEqual(stuff_was_executed[0], True)
+        
+        n = [0] 
+        @repeater
+        def increase_n():
+            n[0] += 1
+        
+        increase_n(3)        
+        self.assertEqual(n[0], 3)
+        
+        n = [0]
+        increase_n(10)
+        self.assertEqual(n[0], 10)
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+A very important issue to note here: bizarrely, it is not possible in (this version of) Python to assign to variables in a scope strictly between
+the immediate local namespace and the global, module-level namespace. That is, 
+
+/// Python ///
+
+def outer_function():
+    my_variable = 3
+    def inner_function():
+        my_variable = 4
+    inner_function()
+    print my_variable
+
+outer_function()
+
+///
+
+will print 3, not 4 -- and there's no keyword available to change this behavior. (Rumor has it that this is fixed in Python 3.) 
+The mutability of lists saves the day:
+
+/// Python ///
+
+def outer_function():
+    my_variable = [3]
+    def inner_function():
+        my_variable[0] = 4
+    inner_function()
+    print my_variable[0]
+
+outer_function()
+
+///
+
+prints 4. This trick, which I learned from Stack Overflow, is used in the test specification above, as you will have noticed.
+
+Finally, the solution, in Ruby:
+
+///...Original Solution (Ruby)...///
+
+def repeater(times = 1)
+  for index in (0...times)
+    yield
+  end
+
+end
+
+///
+
+...and in Python:
+
+
+///...Paraphrased Solution (Python)...///
+
+def repeater(function):
+    def argument_accessor(times=1, *args):        
+        for n in range(times):
+            function(*args)        
+    return argument_accessor
+
+///
+
+Tests successfully passed!
+
+
+ 
+
+
+Lesson 6: Performance Monitor
+-----------------------------
+
+Like the previous lesson, Lesson 6 was a challenge to translate. It required learning about a new concept: that of *mocking* (or *stubbing* or *patching* -- these are all technically [different](http://stackoverflow.com/questions/8180769/mocking-a-class-mock-or-patch) [things](http://martinfowler.com/articles/mocksArentStubs.html), but we will ignore the differences here) functions (or methods, or classes...) for testing purposes. (The difficulty was exacerbated by the non-self-containedness of Test First Ruby: e.g. there was no explanation of what Time.stub(:now) meant, and a direct answer is not really obtainable by Googling -- you end up having to sift through a fair amount of only-somewhat-related background material.)
+
+/// Original Problem (Ruby / RSpec) ///
+
+require "performance_monitor"
+
+require "time"  # loads up the Time.parse method -- do NOT create time.rb!
+
+describe "Performance Monitor" do
+  before do
+    @eleven_am = Time.parse("2011-1-2 11:00:00")
+  end
+  
+///
+
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest, datetime, mock, random, time
+from performance_monitor import measure
+
+ELEVEN_AM = time.mktime((datetime.datetime.strptime("2011-1-2 11:00:00", "%Y-%m-%d %H:%M:%S")).timetuple())
+# courtesy of http://stackoverflow.com/questions/8022161/python-converting-from-datetime-datetime-to-time-time
+
+faketime = ELEVEN_AM
+
+def fake_time():
+    return faketime
+
+///
+
+///...Original Problem (Ruby / RSpec)...///  
+
+  it "takes about 0 seconds to run an empty block" do
+    elapsed_time = measure do
+    end
+    elapsed_time.should be_within(0.1).of(0)
+  end
+
+  it "takes exactly 0 seconds to run an empty block (with stubs)" do
+    Time.stub(:now) { @eleven_am }
+    elapsed_time = measure do
+    end
+    elapsed_time.should == 0
+  end
+
+  it "takes about 1 second to run a block that sleeps for 1 second" do
+    elapsed_time = measure do
+      sleep 1
+    end
+    elapsed_time.should be_within(0.1).of(1)
+  end
+
+  it "takes exactly 1 second to run a block that sleeps for 1 second (with stubs)" do
+    fake_time = @eleven_am
+    Time.stub(:now) { fake_time }
+    elapsed_time = measure do
+      fake_time += 60  # adds one minute to fake_time
+    end
+    elapsed_time.should == 60
+  end
+
+  it "runs a block N times" do
+    n = 0
+    measure(4) do
+      n += 1
+    end
+    n.should == 4
+  end
+
+  it "returns the average time, not the total time, when running multiple times" do
+    run_times = [8,6,5,7]
+    fake_time = @eleven_am
+    Time.stub(:now) { fake_time }
+    average_time = measure(4) do
+      fake_time += run_times.pop
+    end
+    average_time.should == 6.5
+  end
+  
+
+  it "returns the average time when running a random number of times for random lengths of time" do
+    fake_time = @eleven_am
+    Time.stub(:now) { fake_time }
+    number_of_times = rand(10) + 2
+    average_time = measure(number_of_times) do
+      delay = rand(10)
+      fake_time += delay
+    end
+    average_time.should == (fake_time - @eleven_am).to_f/number_of_times
+  end
+
+end
+
+///
+
+
+///...Translated Problem (Python / unittest)...///
+
+
+class PerformanceMonitorTest(unittest.TestCase):    
+    def test_measure_01(self):    # it should take about 0 seconds to execute an empty function  
+        def f():
+            pass
+        elapsed_time = measure(f)
+        self.assertAlmostEqual(elapsed_time, 0.0, 1) 
+    
+    @mock.patch('time.time', fake_time)  # it should take exactly 0 seconds to execute an empty function (with mock) 
+    def test_measure_02_with_mock(self):        
+        def f():
+            pass
+        elapsed_time = measure(f)
+        self.assertEqual(elapsed_time, 0.0)        
+    
+        
+    def test_measure_03_sleep(self):   # it should take about 1 second to execute a function that sleeps for 1 second
+        def f():
+            time.sleep(1)
+        elapsed_time = measure(f)
+        self.assertAlmostEqual(elapsed_time, 1.0, 1)
+        
+        
+    @mock.patch('time.time', fake_time)        # it should take exactly 1 second to run a block that sleeps for 1 second (with mock)
+    def test_measure_04_sleep_with_mock(self):
+        def f():            
+            global faketime
+            faketime = ELEVEN_AM
+            faketime += 1               
+        elapsed_time = measure(f)
+        self.assertEqual(elapsed_time, 1)  
+
+    def test_measure_05_run_block(self): # it should execute a function N times
+        n = [0]
+        def f():
+            n[0] += 1
+        measure(f, 4)
+        self.assertEqual(n[0], 4)        
+        
+    @mock.patch('time.time', fake_time)    
+    def test_measure_06_average_value(self): # it should return the average time, not the total time, when running multiple times
+        run_times = [8,6,5,7]      
+        global faketime
+        faketime = ELEVEN_AM        
+        def f():
+            global faketime
+            faketime += run_times.pop()
+        average_time = measure(f, 4)
+        self.assertEqual(average_time, 6.5)
+        
+
+    @mock.patch('time.time', fake_time)
+    def test_measure_07_average_value(self): # it should return the average time when running a random number of times for random lengths of time
+        global faketime
+        faketime = ELEVEN_AM
+        number_of_times = random.randrange(10) + 2
+        def f():
+            delay = random.randrange(10)
+            global faketime
+            faketime += delay
+        average_time = measure(f, number_of_times)
+        self.assertEqual(average_time, float(faketime - ELEVEN_AM)/number_of_times)                 
+
+
+if __name__ == '__main__':
+    unittest.main()     
+
+///
+
+
+
+/// Original Solution (Ruby) ///
+
+def measure(timescount = 1)
+  timings = []
+  for index in (0...timescount)
+    start = Time.now.to_f
+    yield
+    finish = Time.now.to_f 
+    timings << finish - start 
+  end
+  sum = 0
+  for number in timings
+    sum = sum + number
+  end
+  return sum / timescount
+end
+
+///
+
+
+
+/// Translated Solution (Python) ///
+
+import datetime, time
+
+def measure(function, timescount = 1):
+    timings = []
+    for index in range(timescount):
+        start = time.time()
+        function()
+        finish = time.time()
+        timings.append(finish - start)
+    sum = 0.0  
+    for number in timings:
+        sum = sum + number
+    return sum / timescount
+
+///
+
+
+
+
+Lesson 7: Hello, friend!
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+require "friend"
+
+describe Friend do
+  it "says hello" do
+    Friend.new.greeting.should == "Hello!"
+  end
+
+  it "says hello to someone" do
+    Friend.new.greeting("Bob").should == "Hello, Bob!"
+  end
+end
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest
+from friend import Friend
+
+class FriendTest(unittest.TestCase):
+    def test_hello(self):        
+        self.assertEqual(Friend().greeting(), "Hello!")
+        
+    def test_hello_to_someone(self):
+        self.assertEqual(Friend().greeting("Bob"), "Hello, Bob!")
+
+if __name__ == '__main__':
+    unittest.main()        
+
+///
+
+
+/// Original Solution (Ruby) ///
+
+class Friend
+  def greeting(friend = nil)
+    if friend == nil
+      "Hello!"
+    else
+      "Hello" +", #{friend}" + "!"
+    end
+  end
+end
+
+///
+
+
+/// Translated Solution (Python) ///
+
+class Friend:
+    def greeting(self, friend=None):
+        if friend is None:
+            return "Hello!"
+        else:
+            return "Hello" + ", {0}".format(friend) + "!"
+
+///
+
+
+
+Lesson 8: Book Titles
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+require 'book'
+
+describe Book do
+
+  before do
+    @book = Book.new
+  end
+
+  describe 'title' do
+    it 'should capitalize the first letter' do
+      @book.title = "inferno"
+      @book.title.should == "Inferno"
+    end
+
+    it 'should capitalize every word' do
+      @book.title = "stuart little"
+      @book.title.should == "Stuart Little"
+    end
+
+    describe 'should capitalize every word except...' do
+      describe 'articles' do
+        specify 'the' do
+          @book.title = "alexander the great"
+          @book.title.should == "Alexander the Great"
+        end
+
+        specify 'a' do
+          @book.title = "to kill a mockingbird"
+          @book.title.should == "To Kill a Mockingbird"
+        end
+
+        specify 'an' do
+          @book.title = "to eat an apple a day"
+          @book.title.should == "To Eat an Apple a Day"
+        end
+      end
+
+      specify 'conjunctions' do
+        @book.title = "war and peace"
+        @book.title.should == "War and Peace"
+      end
+
+      specify 'prepositions' do
+        @book.title = "love in the time of cholera"
+        @book.title.should == "Love in the Time of Cholera"
+      end
+    end
+
+    describe 'should always capitalize...' do
+      specify 'I' do
+        @book.title = "what i wish i knew when i was 20"
+        @book.title.should == "What I Wish I Knew When I Was 20"
+      end
+
+      specify 'the first word' do
+        @book.title = "the man in the iron mask"
+        @book.title.should == "The Man in the Iron Mask"
+      end
+    end
+  end
+end
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest
+from book import Book
+
+
+class BookTest(unittest.TestCase):       
+    def test_capitalize_first_letter(self):
+        book = Book("inferno")
+        # book.title = "inferno"
+        self.assertEqual(book.get_title(), "Inferno")
+        
+    def test_capitalize_every_word(self):
+        book = Book("stuart little")
+        self.assertEqual(book.get_title(), "Stuart Little")
+        
+    def test_capitalize_every_word_except(self):
+        def correction(title, correct_title):
+            book = Book(title)
+            self.assertEqual(book.get_title(), correct_title)
+        correction("alexander the great", "Alexander the Great")        
+        correction("to kill a mockingbird", "To Kill a Mockingbird")
+        correction("to eat an apple a day", "To Eat an Apple a Day")
+        correction("war and peace", "War and Peace")
+        correction("love in the time of cholera","Love in the Time of Cholera")
+        correction("what i wish i knew when i was 20", "What I Wish I Knew When I Was 20")
+        correction("the man in the iron mask", "The Man in the Iron Mask")
+        
+
+                               
+        
+        
+        
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+
+/// Original Solution (Ruby) ///
+
+class Book
+  attr_accessor :name
+
+  def initialize
+    @name = String.new
+  end
+
+  def title
+    @name
+  end
+
+  def title=(name)
+    namewords = name.split(' ')
+    capname = []    
+    for index in (0...namewords.length)
+      word = namewords[index]
+      unless ["and", "the", "in", "an", "or", "at", "of", "a", "over"].include?(word) and index != 0
+        word = word.capitalize 
+        end        
+      capname << word
+        
+    end
+    @name = capname.join(' ')
+  end
+  
+end
+
+///
+
+/// Translated Solution (Python) ///
+
+class Book():
+    def __init__(self, name):
+        namewords = name.split(' ')
+        capname = [] 
+               
+        for index in range(len(namewords)):
+            word = namewords[index]
+            if not (word in ["and", "the", "in", "an", "or", "at", "of", "a", "over"] and index != 0):
+                word = word.title()
+            capname.append(word)
+        self.name = ' '.join(capname)
+    
+    def get_title(self):
+        return self.name
+
+///
+
+Lesson 9: Timer
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+
+require 'timer'
+
+describe "Timer" do
+  before(:each) do
+    @timer = Timer.new
+  end
+
+  it "should initialize to 0 seconds" do
+    @timer.seconds.should == 0
+  end
+
+  describe 'time_string' do
+    it "should display 0 seconds as 00:00:00" do
+      @timer.seconds = 0
+      @timer.time_string.should == "00:00:00"
+    end
+
+    it "should display 12 seconds as 00:00:12" do
+      @timer.seconds = 12
+      @timer.time_string.should == "00:00:12"
+    end
+
+    it "should display 66 seconds as 00:01:06" do
+      @timer.seconds = 66
+      @timer.time_string.should == "00:01:06"
+    end
+
+    it "should display 4000 seconds as 01:06:40" do
+      @timer.seconds = 4000
+      @timer.time_string.should == "01:06:40"
+    end
+  end
+
+
+  # One way to implement the Timer is with a helper method.
+  # Uncomment these specs if you want to test-drive that
+  # method, then call that method from inside of time_string.
+  #
+  # describe 'padded' do
+  #   it 'pads zero' do
+  #     @timer.padded(0).should == '00'
+  #   end
+  #   it 'pads one' do
+  #     @timer.padded(1).should == '01'
+  #   end
+  #   it "doesn't pad a two-digit number" do
+  #     @timer.padded(12).should == '12'
+  #   end
+  # end
+
+end
+
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest, timer
+
+
+class TestTimer(unittest.TestCase):
+    def setUp(self):
+        self.timer = timer.Timer()
+        
+    def test_initialize(self):
+        self.assertEqual(self.timer.seconds, 0)
+    
+    def test_0_seconds(self):
+        self.timer.seconds = 0
+        self.assertEqual(self.timer.time_string(),"00:00:00") 
+        
+    def test_12_seconds(self):
+        self.timer.seconds = 12
+        self.assertEqual(self.timer.time_string(), "00:00:12")
+        
+    def test_66_seconds(self):
+        self.timer.seconds = 66
+        self.assertEqual(self.timer.time_string(), "00:01:06")
+        
+    def test_4000_seconds(self):
+        self.timer.seconds = 4000
+        self.assertEqual(self.timer.time_string(), "01:06:40")
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+/// Original Solution (Ruby) ///
+
+def timer(seconds)
+  def hours(seconds)
+    seconds / 3600
+  end
+  
+  def minutes(seconds)
+    (seconds / 60) % 60
+  end
+  
+  def numseconds(seconds)
+    seconds - hours(seconds)*3600 - minutes(seconds)*60
+  end
+  
+  def pad(two_digit_number) # in the sense of 0 < digits <= 2
+    if two_digit_number.to_s.length == 1
+       one_digit_number = two_digit_number.to_s
+      "0" + one_digit_number
+    elsif two_digit_number.to_s.length == 2
+      two_digit_number.to_s
+    else
+      other_number = two_digit_number.to_s
+      other_number
+    end   
+  end
+  
+  pad(hours(seconds).to_s) + ":" + pad(minutes(seconds).to_s) + ":" + pad(numseconds(seconds).to_s)
+  
+end
+
+
+
+
+class Timer
+  attr_accessor :seconds, :time_string
+
+  def initialize
+    @seconds = 0
+  end
+  
+  def time_string
+    @time_string = timer(@seconds)
+  end
+  
+  
+
+
+end
+
+///
+
+
+/// Translated Solution (Python) ///
+
+def timer(seconds):
+    def hours(seconds):
+        return seconds/3600
+        
+    def minutes(seconds):
+        return (seconds / 60) % 60
+        
+    def numseconds(seconds):
+        return seconds - hours(seconds)*3600 - minutes(seconds)*60
+
+    def pad(two_digit_number): # in the sense of 0 < digits <= 2
+        if len(str(two_digit_number)) == 1:
+           one_digit_number = str(two_digit_number)
+           return "0" + one_digit_number
+        elif len(str(two_digit_number)) == 2:
+            return str(two_digit_number)
+        else:
+            other_number = str(two_digit_number)
+            return other_number
+            
+    return pad(str(hours(seconds))) + ":" + pad(str(minutes(seconds))) + ":" + pad(str(numseconds(seconds)))   
+         
+
+class Timer:
+    def __init__(self):
+        self.seconds = 0
+        
+    def time_string(self):
+        return timer(self.seconds)
+        
+
+///
+
+Lesson 10: Temperature
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+require "temperature"
+
+describe Temperature do
+
+  describe "can be constructed with an options hash" do
+    describe "in degrees fahrenheit" do
+      it "at 50 degrees" do
+        Temperature.new(:f => 50).in_fahrenheit.should == 50
+      end
+
+      describe "and correctly convert to celsius" do
+        it "at freezing" do
+          Temperature.new(:f => 32).in_celsius.should == 0
+        end
+
+        it "at boiling" do
+          Temperature.new(:f => 212).in_celsius.should == 100
+        end
+
+        it "at body temperature" do
+          Temperature.new(:f => 98.6).in_celsius.should == 37
+        end
+
+        it "at an arbitrary temperature" do
+          Temperature.new(:f => 68).in_celsius.should == 20
+        end
+      end
+    end
+
+    describe "in degrees celsius" do
+      it "at 50 degrees" do
+        Temperature.new(:c => 50).in_celsius.should == 50
+      end
+
+      describe "and correctly convert to fahrenheit" do
+        it "at freezing" do
+          Temperature.new(:c => 0).in_fahrenheit.should == 32
+        end
+
+        it "at boiling" do
+          Temperature.new(:c => 100).in_fahrenheit.should == 212
+        end
+
+        it "at body temperature" do
+          Temperature.new(:c => 37).in_fahrenheit.should be_within(0.1).of(98.6)
+          # Why do we need to use be_within here?
+          # See http://www.ruby-forum.com/topic/169330
+          # and http://groups.google.com/group/rspec/browse_thread/thread/f3ebbe3c313202bb
+          # Also, try "puts 0.5 - 0.4 - 0.1" -- pretty crazy, right?
+        end
+      end
+    end
+  end
+
+  # Factory Method is a design pattern, not a Ruby language feature.
+  # One way to implement this pattern in Ruby is via class methods --
+  # that is, methods defined on the class (Temperature) rather than
+  # on individual instances of the class.
+  describe "can be constructed via factory methods" do
+
+    it "in degrees celsius" do
+      Temperature.from_celsius(50).in_celsius.should == 50
+      Temperature.from_celsius(50).in_fahrenheit.should == 122
+    end
+
+    it "in degrees fahrenheit" do
+      Temperature.from_fahrenheit(50).in_fahrenheit.should == 50
+      Temperature.from_fahrenheit(50).in_celsius.should == 10
+    end
+
+  end
+
+  # test-driving bonus:
+  #
+  # 1. make two class methods -- ftoc and ctof
+  # 2. refactor to call those methods from the rest of the object
+  #
+  # run *all* the tests during your refactoring, to make sure you did it right
+  #
+  describe "utility class methods" do
+
+  end
+
+  # Here's another way to solve the problem!
+  describe "Temperature subclasses" do
+    describe "Celsius subclass" do
+      it "is constructed in degrees celsius" do
+        Celsius.new(50).in_celsius.should == 50
+        Celsius.new(50).in_fahrenheit.should == 122
+      end
+
+      it "is a Temperature subclass" do
+        Celsius.new(0).should be_a(Temperature)
+      end
+    end
+
+    describe "Fahrenheit subclass" do
+      it "is constructed in degrees fahrenheit" do
+        Fahrenheit.new(50).in_fahrenheit.should == 50
+        Fahrenheit.new(50).in_celsius.should == 10
+      end
+
+      it "is a Temperature subclass" do
+        Fahrenheit.new(0).should be_a(Temperature)
+      end
+    end
+  end
+
+end
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest, temperature
+from temperature import Temperature, Celsius, Fahrenheit
+
+class TemperatureTest(unittest.TestCase):
+    def test_50_degrees_f(self):
+        self.assertEqual(Temperature(f=50).in_fahrenheit(), 50)
+        
+    def test_convert_freezing_to_celsius(self):
+        self.assertEqual(Temperature(f=32).in_celsius(), 0)
+        
+    def test_convert_boiling_to_celsius(self):
+        self.assertEqual(Temperature(f=212).in_celsius(), 100)
+        
+    def test_convert_body_temperature_to_celsius(self):
+        self.assertEqual(Temperature(f=98.6).in_celsius(), 37)
+        
+    def test_convert_arbitrary_temperature_to_celsius(self):
+        self.assertEqual(Temperature(f=68).in_celsius(), 20)
+        
+    def test_50_degrees_c(self):
+        self.assertEqual(Temperature(c=50).in_celsius(), 50)
+        
+    def test_convert_freezing_to_fahrenheit(self):
+        self.assertEqual(Temperature(c=0).in_fahrenheit(), 32)
+        
+    def test_convert_boiling_to_fahrenheit(self):
+        self.assertEqual(Temperature(c=100).in_fahrenheit(), 212)
+        
+    def test_convert_body_temperature_to_fahrenheit(self):
+        self.assertAlmostEqual(Temperature(c=37).in_fahrenheit(), 98.6, delta=0.1)
+        
+    def test_factory_celsius(self): #"factory method"
+        self.assertEqual(Temperature.from_celsius(50).in_celsius(), 50)
+        self.assertEqual(Temperature.from_celsius(50).in_fahrenheit(), 122)
+        
+    def test_factory_fahrenheit(self): #"factory method"
+        self.assertEqual(Temperature.from_fahrenheit(50).in_fahrenheit(), 50)
+        self.assertEqual(Temperature.from_fahrenheit(50).in_celsius(), 10)
+        
+class TemperatureSubclasses(unittest.TestCase):
+    def test_celsius_construct(self):
+        self.assertEqual(Celsius(50).in_celsius(), 50)
+        self.assertEqual(Celsius(50).in_fahrenheit(),122)
+        
+    def test_celsius_Temperature_subclass(self):
+        self.assertIsInstance(Celsius(50), Temperature)
+        
+    def test_fahrenheit_construct(self):
+        self.assertEqual(Fahrenheit(50).in_fahrenheit(), 50)
+        self.assertEqual(Fahrenheit(50).in_celsius(), 10)
+        
+    def test_fahrenheit_Temperature_subclass(self):
+        self.assertIsInstance(Fahrenheit(50), Temperature)
+        
+    
+        
+        
+    
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+/// Original Solution (Ruby) ///
+
+class Temperature
+  attr_accessor :F, :C
+  
+  def self.ftoc(f)
+    (5.0/9.0)*(f - 32)
+  end
+  
+  def self.ctof(c)
+    (9.0/5.0)*c + 32
+  end
+
+
+  def initialize(options_hash)
+    @hash = options_hash
+    if @hash.has_key?(:f)
+      @F = @hash[:f]
+    elsif @hash.has_key?(:c)
+      @C = @hash[:c]
+    else
+     "wrong input!"
+    end
+  end
+  
+  def in_fahrenheit
+    if @hash.has_key?(:c)    
+      self.class.ctof(@C)
+    else
+      @F
+    end      
+    
+  
+  end
+  
+  def in_celsius
+    if @hash.has_key?(:f) 
+      self.class.ftoc(@F)
+    else
+      @C
+    end
+  end
+
+  
+  def self.from_celsius(degrees)
+    temp = Temperature.new(:c => degrees)      
+  end
+  
+  def self.from_fahrenheit(degrees)   
+    temp = Temperature.new(:f => degrees)    
+  end
+  
+end
+
+class Celsius < Temperature 
+  
+  def initialize(number)
+    super(:c => number)  
+  end
+
+end
+
+class Fahrenheit < Temperature
+
+  def initialize(number)
+    super(:f => number)
+  end
+  
+end
+
+///
+
+
+/// Translated Solution (Python) ///
+
+class Temperature:
+
+    @classmethod
+    def ftoc(cls, f):
+        return (5.0/9.0)*(f - 32)
+        
+    @classmethod
+    def ctof(cls, c):
+        return (9.0/5.0)*c + 32
+        
+    def __init__(self, f=None, c=None):        
+        self.F = f        
+        self.C = c
+        
+    def in_fahrenheit(self):
+        if self.F is not None:
+            return self.F            
+        elif self.C is not None:
+            return Temperature.ctof(self.C)  
+        
+            
+    def in_celsius(self):
+        if self.C is not None:
+            return self.C    
+        elif self.F is not None:
+            return Temperature.ftoc(self.F)
+            
+    @classmethod
+    def from_celsius(cls, degrees):
+        temp = Temperature(c=degrees)
+        return temp
+        
+    @classmethod
+    def from_fahrenheit(cls, degrees):
+        temp = Temperature(f=degrees)
+        return temp
+        
+class Celsius(Temperature):
+    def __init__(self, number):
+        Temperature.__init__(self, c=number)
+        
+class Fahrenheit(Temperature):
+    def __init__(self, number):
+        Temperature.__init__(self, f=number)
+    
+
+            
+        
+            
+    
+        
+    
+
+///
+
+Lesson 11: 
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+
+require 'dictionary'
+
+describe Dictionary do
+  before do
+    @d = Dictionary.new
+  end
+
+  it 'is empty when created' do
+    @d.entries.should == {}
+  end
+
+  it 'can add whole entries with keyword and definition' do
+    @d.add('fish' => 'aquatic animal')
+    @d.entries.should == {'fish' => 'aquatic animal'}
+    @d.keywords.should == ['fish']
+  end
+
+  it 'add keywords (without definition)' do
+    @d.add('fish')
+    @d.entries.should == {'fish' => nil}
+    @d.keywords.should == ['fish']
+  end
+
+  it 'can check whether a given keyword exists' do
+    @d.include?('fish').should be_falsey
+  end
+
+  it "doesn't cheat when checking whether a given keyword exists" do
+    @d.include?('fish').should be_falsey # if the method is empty, this test passes with nil returned
+    @d.add('fish')
+    @d.include?('fish').should be_truthy # confirms that it actually checks
+    @d.include?('bird').should be_falsey # confirms not always returning true after add
+  end
+
+  it "doesn't include a prefix that wasn't added as a word in and of itself" do
+    @d.add('fish')
+    @d.include?('fi').should be_falsey
+  end
+
+  it "doesn't find a word in empty dictionary" do
+    @d.find('fi').should be_empty # {}
+  end
+
+  it 'finds nothing if the prefix matches nothing' do
+    @d.add('fiend')
+    @d.add('great')
+    @d.find('nothing').should be_empty
+  end
+
+  it "finds an entry" do
+    @d.add('fish' => 'aquatic animal')
+    @d.find('fish').should == {'fish' => 'aquatic animal'}
+  end
+
+  it 'finds multiple matches from a prefix and returns the entire entry (keyword + definition)' do
+    @d.add('fish' => 'aquatic animal')
+    @d.add('fiend' => 'wicked person')
+    @d.add('great' => 'remarkable')
+    @d.find('fi').should == {'fish' => 'aquatic animal', 'fiend' => 'wicked person'}
+  end
+
+  it 'lists keywords alphabetically' do
+    @d.add('zebra' => 'African land animal with stripes')
+    @d.add('fish' => 'aquatic animal')
+    @d.add('apple' => 'fruit')
+    @d.keywords.should == %w(apple fish zebra)
+  end
+
+  it 'can produce printable output like this: [keyword] "definition"' do
+    @d.add('zebra' => 'African land animal with stripes')
+    @d.add('fish' => 'aquatic animal')
+    @d.add('apple' => 'fruit')
+    @d.printable.should == %Q{[apple] "fruit"\n[fish] "aquatic animal"\n[zebra] "African land animal with stripes"}
+  end
+end
+
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest, dictionary
+
+class DictionaryTest(unittest.TestCase):
+    def setUp(self):
+        self.d = dictionary.Dictionary()
+        
+    def test_00_empty_when_created(self):
+        self.assertEqual(self.d.entries, {})
+        
+    def test_01_add_whole_entries_keyword_definition(self):
+        self.d.add({'fish':'acquatic animal'})
+        self.assertEqual(self.d.entries, {'fish':'acquatic animal'} )
+        self.assertEqual(self.d.keywords(), ['fish'])
+        
+        
+    def test_02_add_keyword_without_definition(self):        
+        self.d.add('fish')
+        self.assertEqual(self.d.entries, {'fish': None} )
+        self.assertEqual(self.d.keywords(), ['fish'])
+        
+        
+    def test_03_check_whether_keyword_exists(self):        
+        self.assertNotIn('fish', self.d)
+        
+    def test_04_doesnt_cheat_when_checking_keyword_existence(self):
+        self.assertNotIn('fish', self.d)
+        self.d.add('fish')
+        self.assertIn('fish', self.d)
+        self.assertNotIn('bird', self.d)
+        
+        
+    def test_05_doesnt_include_prefix(self):        
+        self.d.add('fish')
+        self.assertNotIn('fi', self.d)        
+        
+    def test_06_doesnt_find_word_empty_dictionary(self):
+        self.assertEqual(self.d.find('fi'), {})
+        
+    def test_07_finds_nothing_if_prefix_matches_nothing(self):
+        self.d.add('fiend')
+        self.d.add('great')
+        self.assertEqual(self.d.find('nothing'), {})
+        
+    def test_08_finds_an_entry(self):
+        self.d.add({'fish':'acquatic animal'})
+        self.assertEqual(self.d.find('fi'), {'fish':'acquatic animal'})
+        
+    def test_09_finds_multiple_matches_from_prefix(self):
+        self.d.add({'fish':'acquatic animal'})
+        self.d.add({'fiend':'wicked person'})
+        self.d.add({'great':'remarkable'})
+        self.assertEqual(self.d.find('fi'), {'fish':'acquatic animal', 'fiend':'wicked person'})
+        
+    def test_10_lists_keywords_alphabetically(self):
+        self.d.add({'zebra': 'African land animal with stripes'})
+        self.d.add({'fish': 'aquatic animal'})
+        self.d.add({'apple': 'fruit'})    
+        self.assertEqual(self.d.keywords(), ['apple', 'fish', 'zebra'])  
+
+    def test_11_produce_printable_output(self):
+        self.d.add({'zebra': 'African land animal with stripes'})
+        self.d.add({'fish': 'aquatic animal'})
+        self.d.add({'apple': 'fruit'})  
+        self.assertEqual(self.d.printable(), "[apple] \"fruit\"\n[fish] \"aquatic animal\"\n[zebra] \"African land animal with stripes\"")
+
+
+        
+        
+        
+        
+        
+        
+    
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+/// Original Solution (Ruby) ///
+
+class Dictionary
+
+  def initialize
+    @entries = {}
+  end
+ 
+  def entries
+    @entries  
+  end  
+  
+  
+  def add(entry)    
+    if entry.respond_to?(:keys)
+      @entries[entry.keys[0]] = entry[entry.keys[0]]     
+    else
+      entries[entry] = nil
+    end
+        
+  end
+
+  def keywords
+    @keywords = @entries.keys.sort
+    @keywords
+        
+  end
+
+  def include?(entry)  
+    @entries.include?(entry)
+  end
+      
+      
+  def find(word)   
+      results = {}
+      for key in @entries.keys
+        if key.include?(word)
+          results[key] = @entries[key]
+        end
+      end
+      return results
+      
+
+  end
+  
+  def printable
+  output = ""
+  for entry in @entries.keys.sort[0...-1]
+    output << "[" + entry + "]" + " " + "\"" + @entries[entry] + "\"" +"\n"
+  end 
+  output << "[" + entries.keys.sort[-1] + "]" + " " + "\"" + @entries[entries.keys.sort[-1]] + "\"" 
+  output  
+  
+  end
+  
+
+
+  
+  
+end
+
+
+
+# @d = Dictionary.new
+# @d.add('fish' => 'aquatic animal')
+# puts "@d.entries: " + @d.entries.to_s
+# puts "@d.keywords: " + @d.keywords.to_s
+# puts "@d.entries.keys: " + @d.entries.keys.to_s
+# puts "@d.entries.values: " + @d.entries.values.to_s
+# puts "@d.include?(\"fish\"): " + @d.include?("fish").to_s
+# puts @d.include?("fish")
+
+
+
+
+
+
+
+
+///
+
+/// Translated Solution (Python) ///
+
+class Dictionary(dict): # theoretically cheating to inherit from dict, but not really wrong in this case
+    
+    def __init__(self):
+        self.entries = self
+        
+    def add(self, entry):
+        if hasattr(entry, 'keys'):
+            self[entry.keys()[0]] = entry[entry.keys()[0]]
+        else:
+            self[entry] = None
+            
+    def keywords(self):
+        return sorted(self.keys())
+        
+    def find(self, word):
+        results = {}
+        for key in self.entries:
+            if word in key:
+                results[key] = self[key]
+        return results
+        
+    def printable(self):
+        output = ""
+        for entry in sorted(self.entries)[:-1]:
+            output = output + "[" + entry + "]" + " " + "\"" + self[entry] + "\"" +"\n"
+        output = output + "[" + sorted(self.entries)[-1] + "]" + " " + "\"" + self[sorted(self.entries)[-1]] + "\"" 
+        return output
+        
+            
+                    
+
+///
+
+Lesson 12: RPN Calculator 
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+require "rpn_calculator"
+
+describe RPNCalculator do
+
+  attr_accessor :calculator
+
+  before do
+    @calculator = RPNCalculator.new
+  end
+
+  it "adds two numbers" do
+    calculator.push(2)
+    calculator.push(3)
+    calculator.plus
+    calculator.value.should == 5
+  end
+
+  it "adds three numbers" do
+    calculator.push(2)
+    calculator.push(3)
+    calculator.push(4)
+    calculator.plus
+    calculator.value.should == 7
+    calculator.plus
+    calculator.value.should == 9
+  end
+
+  it "subtracts the second number from the first number" do
+    calculator.push(2)
+    calculator.push(3)
+    calculator.minus
+    calculator.value.should == -1
+  end
+
+  it "adds and subtracts" do
+    calculator.push(2)
+    calculator.push(3)
+    calculator.push(4)
+    calculator.minus
+    calculator.value.should == -1
+    calculator.plus
+    calculator.value.should == 1
+  end
+
+  it "multiplies and divides" do
+    calculator.push(2)
+    calculator.push(3)
+    calculator.push(4)
+    calculator.divide
+    calculator.value.should == (3.0 / 4.0)
+    calculator.times
+    calculator.value.should == 2.0 * (3.0 / 4.0)
+  end
+
+  it "resolves operator precedence unambiguously" do
+    # 1 2 + 3 * => (1 + 2) * 3
+
+    calculator.push(1)
+    calculator.push(2)
+    calculator.plus
+    calculator.push(3)
+    calculator.times
+    calculator.value.should == (1+2)*3
+
+      
+    # 1 2 3 * + => 1 + (2 * 3)
+    calculator.push(1)
+    calculator.push(2)
+    calculator.push(3)
+    calculator.times
+    calculator.plus
+    calculator.value.should == 1+(2*3)
+  end
+
+  it "fails informatively when there's not enough values stacked away" do
+    expect {
+      calculator.plus
+    }.to raise_error("calculator is empty")
+
+    expect {
+      calculator.minus
+    }.to raise_error("calculator is empty")
+
+    expect {
+      calculator.times
+    }.to raise_error("calculator is empty")
+
+    expect {
+      calculator.divide
+    }.to raise_error("calculator is empty")
+  end
+
+  # extra credit
+  it "tokenizes a string" do
+    calculator.tokens("1 2 3 * + 4 5 - /").should ==
+      [1, 2, 3, :*, :+, 4, 5, :-, :/]
+  end
+
+  # extra credit
+  it "evaluates a string" do
+    calculator.evaluate("1 2 3 * +").should ==
+      ((2 * 3) + 1)
+
+    calculator.evaluate("4 5 -").should ==
+      (4 - 5)
+
+    calculator.evaluate("2 3 /").should ==
+      (2.0 / 3.0)
+
+    # puts "1 2 3 * + 4 5 - /"
+      
+    calculator.evaluate("1 2 3 * + 4 5 - /").should ==
+      (1.0 + (2 * 3)) / (4 - 5)
+  end
+
+end
+
+
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest, rpn_calculator
+
+class RPNCalculatorTest(unittest.TestCase):
+    def setUp(self):
+        self.calculator = rpn_calculator.RPNCalculator()
+        
+    def test_add_two_numbers(self):
+        self.calculator.push(2)
+        self.calculator.push(3)
+        self.calculator.plus()
+        self.assertEqual(self.calculator.value, 5)
+
+    def test_add_three_numbers(self):
+        self.calculator.push(2)
+        self.calculator.push(3)
+        self.calculator.push(4)
+        self.calculator.plus()
+        self.assertEqual(self.calculator.value, 7)
+        self.calculator.plus()
+        self.assertEqual(self.calculator.value, 9)
+        
+    def test_subtracts_second_number_from_first(self):
+        self.calculator.push(2)
+        self.calculator.push(3)
+        self.calculator.minus()
+        self.assertEqual(self.calculator.value, -1)
+        
+    def test_adds_and_subtracts(self):
+        self.calculator.push(2)
+        self.calculator.push(3)
+        self.calculator.push(4)
+        self.calculator.minus()
+        self.assertEqual(self.calculator.value, -1)
+        self.calculator.plus()
+        self.assertEqual(self.calculator.value, 1)
+        
+    def test_multiplies_and_divides(self):
+        self.calculator.push(2)
+        self.calculator.push(3)
+        self.calculator.push(4)
+        self.calculator.divide()
+        self.assertEqual(self.calculator.value, (3.0/4.0)) 
+        self.calculator.times()
+        self.assertEqual(self.calculator.value, 2*(3.0/4.0))  
+
+    def test_resolves_operator_precedence_unambiguously(self):
+        # 1 2 + 3 * => (1 + 2) * 3
+        self.calculator.push(1)
+        self.calculator.push(2)
+        self.calculator.plus()
+        self.calculator.push(3)
+        self.calculator.times()
+        self.assertEqual(self.calculator.value, (1+2)*3)  
+        
+        # 1 2 3 * + => 1 + (2 * 3)
+        self.calculator.push(1)
+        self.calculator.push(2)
+        self.calculator.push(3) 
+        self.calculator.times()
+        self.calculator.plus()
+        self.assertEqual(self.calculator.value, 1+(2*3))
+        
+    def test_fails_informatively_when_not_enough_values(self):
+        from rpn_calculator import EmptyCalculator
+        self.assertRaises(EmptyCalculator, self.calculator.plus) #not self.calculator.plus() !
+        self.assertRaises(EmptyCalculator, self.calculator.minus)
+        self.assertRaises(EmptyCalculator, self.calculator.times)
+        self.assertRaises(EmptyCalculator, self.calculator.divide)
+        
+    def test_tokenizes_string(self):
+        self.assertEqual(self.calculator.tokens("1 2 3 * + 4 5 - /"), [1, 2, 3, "*", "+", 4, 5, "-", "/"])
+        
+    def test_evaluates_string(self):
+        self.assertEqual(self.calculator.evaluate("1 2 3 * +"), ((2 * 3) + 1))
+        self.assertEqual(self.calculator.evaluate("4 5 -"), (4 - 5))
+        self.assertEqual(self.calculator.evaluate("2 3 /"), (2.0 / 3.0))
+        self.assertEqual(self.calculator.evaluate("1 2 3 * + 4 5 - /"), (1.0 + (2 * 3)) / (4 - 5)) 
+        
+        
+        
+        
+                
+        
+
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+/// Original Solution (Ruby) ///
+
+def arithmetic(op, a, b)
+if op == "plus"
+  a + b    
+  
+elsif op == "minus"
+  a - b
+
+elsif op == "times"
+  a * b
+
+elsif op == "divide"
+  a / b
+
+end   
+
+end
+
+
+class RPNCalculator
+
+  attr_accessor :inputlist, :value
+  
+  def initialize
+    @inputlist = []
+    @value = 0.0
+  end
+  
+  
+  def push(input)
+    @inputlist << input.to_f  
+  end
+  
+  def operation(opname)
+    if @inputlist.length >= 2
+      things = @inputlist.pop(2)
+      @value = arithmetic(opname, things[0], things[1])
+      self.push(@value)
+      return @value
+    else
+      raise EmptyCalculator, "calculator is empty"    
+    end    
+  end
+
+
+  
+  def plus
+    self.operation("plus")
+  end
+  
+  def minus
+    self.operation("minus")
+  end
+
+  def times
+    self.operation("times")
+  end
+  
+  def divide
+    self.operation("divide")
+  end
+  
+
+  def value
+    @value
+  end
+
+  def tokens(input)
+    def sym(x)
+      if x.to_i == 0 and x != "0"
+        x.to_sym
+      else
+        x.to_i
+      end
+    end
+    input.split(' ').map {|x| sym(x)}
+    
+  end
+
+  def evaluate(input)
+    putin = self.tokens(input)
+    for x in putin
+      if x.is_a?(Fixnum) or x.is_a?(Float)
+        self.push(x)
+      elsif x == :+
+        self.plus
+      elsif x == :-
+        self.minus
+      elsif x == :*
+        self.times
+      elsif x == :/
+        self.divide
+      end
+    end
+    return self.value
+  end
+
+end
+
+class EmptyCalculator < StandardError 
+
+end
+
+
+
+
+///
+
+/// Translated Solution (Python) ///
+
+def arithmetic(op, a, b):
+    if op == "plus":
+        return a + b    
+  
+    elif op == "minus":
+        return a - b
+
+    elif op == "times":
+        return a * b
+
+    elif op == "divide":
+        return a / b
+        
+class RPNCalculator:
+    def __init__(self):
+        self.inputlist = []
+        self.value = 0.0
+     
+    def push(self, input):
+        self.inputlist.append(float(input))
+        
+    def operation(self, opname):
+        if len(self.inputlist) >= 2:
+            things = self.inputlist[-2:]
+            self.inputlist = self.inputlist[:-2]
+            self.value = arithmetic(opname, things[0], things[1])
+            self.push(self.value)
+            return self.value
+        else:
+            raise EmptyCalculator("calculator is empty")
+             
+    def plus(self):
+        return self.operation("plus")
+        
+    def minus(self):
+        return self.operation("minus")
+        
+    def times(self):
+        return self.operation("times")
+        
+    def divide(self):
+        return self.operation("divide")
+        
+    def tokens(self, input):
+        def string(x):
+            if x.isdigit():
+                return int(x)
+            else:
+                return x
+        return [string(x) for x in input.split(' ')]
+        
+    def evaluate(self, input):
+        putin = self.tokens(input)
+        for x in putin:
+            if isinstance(x, int) or isinstance(x, float):
+                self.push(x)
+            elif x == "+":
+                self.plus()
+            elif x == "-":
+                self.minus()
+            elif x == "*":
+                self.times()
+            elif x == "/":
+                self.divide()
+        return self.value
+        
+class EmptyCalculator(Exception):
+    pass    
+             
+
+///
+
+Lesson 13: XML Document
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+require "xml_document"
+
+describe XmlDocument do
+  before do
+    @xml = XmlDocument.new
+  end
+
+  it "renders an empty tag" do
+    @xml.hello.should == "<hello/>"
+  end
+
+  it "renders a tag with attributes" do
+    @xml.hello(:name => 'dolly').should == "<hello name='dolly'/>"
+  end
+
+  it "renders a randomly named tag" do
+    tag_name = (1..8).map{|i| ('a'..'z').to_a[rand(26)]}.join
+    @xml.send(tag_name).should == "<#{tag_name}/>"
+  end
+
+  it "renders block with text inside" do
+    @xml.hello do
+      "dolly"
+    end.should == "<hello>dolly</hello>"
+  end
+
+  it "nests one level" do
+    @xml.hello do
+      @xml.goodbye
+    end.should == "<hello><goodbye/></hello>"
+  end
+
+  it "nests several levels" do
+    xml = XmlDocument.new
+    xml.hello do
+      xml.goodbye do
+        xml.come_back do
+          xml.ok_fine(:be => "that_way")
+        end
+      end
+    end.should == "<hello><goodbye><come_back><ok_fine be='that_way'/></come_back></goodbye></hello>"
+  end
+
+  it "indents" do
+    @xml = XmlDocument.new(true)
+    @xml.hello do
+      @xml.goodbye do
+        @xml.come_back do
+          @xml.ok_fine(:be => "that_way")
+        end
+      end
+    end.should ==
+    "<hello>\n" +
+    "  <goodbye>\n" +
+    "    <come_back>\n" +
+    "      <ok_fine be='that_way'/>\n" +
+    "    </come_back>\n" +
+    "  </goodbye>\n" +
+    "</hello>\n"
+  end
+end
+
+
+///
+
+
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest, xml_document, random, string
+
+class TestXMLDocument(unittest.TestCase):
+    def setUp(self):
+        self.xml = xml_document.XMLDocument()
+        
+    def test_renders_empty_tag(self):
+        self.assertEqual(self.xml.hello(), "<hello/>")
+        
+    def test_renders_tag_with_attributes(self):
+        self.assertEqual(self.xml.hello({"name":"dolly"}), "<hello name='dolly'/>")
+        
+    def test_renders_randomly_named_tag(self):
+        tag_name = ''.join([random.choice(string.lowercase) for x in range(9)])
+        self.assertEqual(self.xml.send(tag_name), "<{0}/>".format(tag_name))
+        
+    def test_renders_block_with_text_inside(self):
+        def f():
+            return "dolly"
+        self.assertEqual(self.xml.hello(function=f)(),"<hello>dolly</hello>")
+        
+    def test_nests_one_level(self):
+        self.assertEqual(self.xml.hello(function=self.xml.goodbye)(),"<hello><goodbye/></hello>")
+        
+    def test_nests_several_levels(self):
+        self.assertEqual(self.xml.hello(function=self.xml.goodbye(function=self.xml.come_back(function=self.xml.ok_fine({"be":"that_way"}))))(), "<hello><goodbye><come_back><ok_fine be='that_way'/></come_back></goodbye></hello>" )
+        
+    def test_indents(self):
+        self.xml = xml_document.XMLDocument(True)
+        self.assertEqual(self.xml.indents, True)
+        self.assertEqual(self.xml.hello(function=self.xml.goodbye(function=self.xml.come_back(function=self.xml.ok_fine({"be":"that_way"}))))(), "<hello>\n" +
+            "  <goodbye>\n" +
+            "    <come_back>\n" +
+            "      <ok_fine be='that_way'/>\n" +
+            "    </come_back>\n" +
+            "  </goodbye>\n" +
+            "</hello>\n")    
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+/// Original Solution (Ruby) ///
+
+
+class XmlDocument
+
+  def initialize(indents = false)
+    @indents = indents 
+  end
+  
+  def indent(spaces)
+    if @indents
+      " "*spaces
+    else
+      ""
+    end
+  end
+  
+  def newline_ifnec
+    if @indents
+      "\n"    
+    else
+      ""
+    end  
+  end
+
+  def say(thing, options_hash, spaces = 0)
+    if options_hash == "" and not block_given?
+      self.indent(spaces) + "<#{thing}/>" + self.newline_ifnec
+    elsif block_given?      
+      text = yield
+      self.indent(spaces) + "<#{thing}>" + self.newline_ifnec + "#{text}" + self.indent(spaces) + "</#{thing}>"  +  self.newline_ifnec       
+    else
+      name = options_hash[:name]
+      self.indent(spaces) + "<#{thing} name='#{name}'/>" + self.newline_ifnec   
+    end    
+  
+  end
+  
+
+  
+  def hello(options_hash = "")
+    if block_given?
+      self.say("hello", options_hash) {yield}
+    else
+      self.say("hello", options_hash) 
+    end
+      
+  end
+  
+  def goodbye(options_hash = "")
+    if block_given?
+      self.say("goodbye", options_hash, 2) {yield}
+    else
+      self.say("goodbye", options_hash, 2) 
+    end    
+  end
+
+  def come_back(options_hash = "")
+    if block_given?
+      self.say("come_back", options_hash, 4) {yield}
+    else
+      self.say("come_back", options_hash, 4) 
+    end   
+  
+  end
+  
+  def ok_fine(options_hash = "")
+    self.indent(6) + "<ok_fine #{options_hash.keys[0]}='#{options_hash[options_hash.keys[0]]}'/>" + self.newline_ifnec  
+  end
+
+
+  def send(string)
+    "<#{string}/>"   
+  end
+  
+
+
+end
+
+///
+
+/// Translated Solution (Python) ///
+
+class XMLDocument:
+    
+    def __init__(self, indents=False):
+        self.indents = indents
+        
+    def indent(self, spaces):
+        if self.indents:
+            return " "*spaces
+        else:
+            return ""
+            
+    def newline_ifnec(self):         
+        if self.indents:            
+            return "\n" 
+        else:            
+            return  ""     
+
+    def say(self, thing, options_hash, spaces=0, function=None):
+        if options_hash == {} and function is None:
+            return self.indent(spaces) + "<{thing}/>".format(thing=thing) + self.newline_ifnec()
+        elif function is not None:
+            def argument_accessor(*args, **kwargs):
+                text = function(*args, **kwargs)
+                return (self.indent(spaces) + "<{thing}>".format(thing=thing) +
+                    self.newline_ifnec() + "{text}".format(text=text) + self.indent(spaces) + 
+                    "</{thing}>".format(thing=thing)  +  self.newline_ifnec() )
+            return argument_accessor
+        else:
+            name = options_hash["name"]
+            return self.indent(spaces) + "<{thing} name='{name}'/>".format(thing=thing, name=name) + self.newline_ifnec()
+            
+    def hello(self, options_hash={}, function=None):
+        if function is not None:
+            def argument_accessor(*args, **kwargs):
+                return self.say("hello", options_hash, function=function)(*args, **kwargs)
+            return argument_accessor
+        else:
+            return self.say("hello", options_hash)        
+            
+    def goodbye(self, options_hash={}, function=None):
+        if function is not None:
+            def argument_accessor(*args, **kwargs):
+                return self.say("goodbye", options_hash, 2, function)(*args, **kwargs)
+            return argument_accessor
+        else:
+            return self.say("goodbye", options_hash, 2) 
+            
+    def come_back(self, options_hash={}, function=None):
+        if function is not None:
+            def argument_accessor(*args, **kwargs):
+                return self.say("come_back", options_hash, 4, function)(*args, **kwargs)
+            return argument_accessor
+        else:
+            return self.say("come_back", options_hash, 4)
+            
+    def ok_fine(self, options_hash={}):
+        def f():
+            return self.indent(6) + "<ok_fine {0}='{1}'/>".format(options_hash.keys()[0], options_hash[options_hash.keys()[0]]) + self.newline_ifnec()
+        return f
+        
+    def send(self, string):
+        return "<{string}/>".format(string=string) 
+                        
+
+///
+
+Lesson 14: Array/List Extensions
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+require "array_extensions" # we don't call it "array.rb" since that would be confusing
+
+describe Array do
+
+  describe "#sum" do
+    it "has a #sum method" do
+      [].should respond_to(:sum)
+    end
+
+    it "should be 0 for an empty array" do
+      [].sum.should == 0
+    end
+
+    it "should add all of the elements" do
+      [1,2,4].sum.should == 7
+    end
+  end
+
+  describe '#square' do
+    it "does nothing to an empty array" do
+      [].square.should == []
+    end
+
+    it "returns a new array containing the squares of each element" do
+      [1,2,3].square.should == [1,4,9]
+    end
+  end
+
+  describe '#square!' do
+    it "squares each element of the original array" do
+      array = [1,2,3]
+      array.square!
+      array.should == [1,4,9]
+    end
+  end
+
+end
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest
+from list_extensions import Array
+
+class ArraySumTest(unittest.TestCase):
+    def test_sum_method(self):
+        self.assertTrue(hasattr(Array(), "sum"))
+    
+    def test_0_for_empty_array(self):
+        self.assertEqual(Array().sum(),0)
+        
+    def test_add_all_the_elements(self):
+        self.assertEqual(Array(1,2,4).sum(), 7)        
+
+class ArraySquareTest(unittest.TestCase):
+    def test_does_nothing_to_empty(self):
+        A = Array()
+        self.assertEqual(A.square(), [])
+        
+    def test_returns_new_array_containing_squares(self):
+        A = Array(1,2,3)
+        self.assertEqual(A.square(), [1,4,9]) 
+    
+
+class ArraySQUARETest(unittest.TestCase): # yeah I know this replacement for "!" isn't the "proper convention", but it amuses me
+    def test_squares_each_element(self):
+        array = Array(1,2,3)
+        array.SQUARE()
+        self.assertEqual(array, [1,4,9])
+    
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+/// Original Solution (Ruby) ///
+
+class Array
+
+  def sum
+    s = 0
+    for x in self
+      s = s + x
+    end
+    return s        
+  end
+  
+  def square
+    self.map {|x| x*x}
+  end
+  
+  def square!
+    squares = self.square
+    for i in (1...self.length)
+      self[i] = squares[i]
+    end
+    
+  
+  end
+
+end
+
+///
+
+/// Translated Solution (Python) ///
+
+class Array(list):
+    def __init__(self, *args):
+        for element in args:
+            self.append(element)
+            
+    def sum(self):
+        s = 0
+        for x in self:
+            s = s + x
+        return s
+        
+    def square(self):
+        return [x*x for x in self]
+        
+    def SQUARE(self):
+        squares = self.square()
+        for i in range(len(self)):
+            self[i] = squares[i]
+            
+            
+
+///
+
+Lesson 15: In Words
+-----------------------------
+
+/// Original Problem (Ruby / RSpec) ///
+
+require "in_words"
+
+describe Fixnum do
+
+  it "reads 0 to 9" do
+    0.in_words.should == 'zero'
+    1.in_words.should == 'one'
+    2.in_words.should == 'two'
+    3.in_words.should == 'three'
+    4.in_words.should == 'four'
+    5.in_words.should == 'five'
+    6.in_words.should == 'six'
+    7.in_words.should == 'seven'
+    8.in_words.should == 'eight'
+    9.in_words.should == 'nine'
+  end
+
+  it "reads 10 to 12" do
+    10.in_words.should == 'ten'
+    11.in_words.should == 'eleven'
+    12.in_words.should == 'twelve'
+  end
+
+  it "reads teens" do
+    13.in_words.should == 'thirteen'
+    14.in_words.should == 'fourteen'
+    15.in_words.should == 'fifteen'
+    16.in_words.should == 'sixteen'
+    17.in_words.should == 'seventeen'
+    18.in_words.should == 'eighteen'
+    19.in_words.should == 'nineteen'
+  end
+
+  it "reads tens" do
+    20.in_words.should == 'twenty'
+    30.in_words.should == 'thirty'
+    40.in_words.should == 'forty'
+    50.in_words.should == 'fifty'
+    60.in_words.should == 'sixty'
+    70.in_words.should == 'seventy'
+    80.in_words.should == 'eighty'
+    90.in_words.should == 'ninety'
+  end
+
+  it "reads various other numbers less than 100" do
+    20.in_words.should == 'twenty'
+    77.in_words.should == 'seventy seven'
+    99.in_words.should == 'ninety nine'
+  end
+
+  it "reads hundreds" do
+    100.in_words.should == 'one hundred'
+    200.in_words.should == 'two hundred'
+    300.in_words.should == 'three hundred'
+    123.in_words.should == 'one hundred twenty three'
+    777.in_words.should == 'seven hundred seventy seven'
+    818.in_words.should == 'eight hundred eighteen'
+    512.in_words.should == 'five hundred twelve'
+    999.in_words.should == 'nine hundred ninety nine'
+  end
+
+  it "reads thousands" do
+    1000.in_words.should == 'one thousand'
+    32767.in_words.should == 'thirty two thousand seven hundred sixty seven'
+    32768.in_words.should == 'thirty two thousand seven hundred sixty eight'
+  end
+
+  it "reads millions" do
+    10_000_001.in_words.should == 'ten million one'
+  end
+
+  it "reads billions" do
+    1_234_567_890.in_words.should == 'one billion two hundred thirty four million five hundred sixty seven thousand eight hundred ninety'
+  end
+
+  it "reads trillions" do
+    1_000_000_000_000.in_words.should == 'one trillion'
+    1_000_000_000_001.in_words.should == 'one trillion one'
+    1_888_259_040_036.in_words.should == 'one trillion eight hundred eighty eight billion two hundred fifty nine million forty thousand thirty six'
+  end
+
+end
+
+
+///
+
+/// Translated Problem (Python / unittest) ///
+
+import unittest
+from in_words import in_words
+
+class InWordsTest(unittest.TestCase):
+    def test_reads_0_to_9(self):
+        self.assertEqual(in_words(0),'zero')
+        self.assertEqual(in_words(1),'one')
+        self.assertEqual(in_words(2),'two')
+        self.assertEqual(in_words(3),'three')
+        self.assertEqual(in_words(4),'four')
+        self.assertEqual(in_words(5),'five')
+        self.assertEqual(in_words(6),'six')
+        self.assertEqual(in_words(7),'seven')
+        self.assertEqual(in_words(8),'eight')
+        self.assertEqual(in_words(9),'nine')
+        
+    def test_reads_10_to_12(self):
+        self.assertEqual(in_words(10),'ten')
+        self.assertEqual(in_words(11),'eleven')
+        self.assertEqual(in_words(12),'twelve')
+        
+    def test_reads_teens(self):
+        self.assertEqual(in_words(13),'thirteen')
+        self.assertEqual(in_words(14),'fourteen')
+        self.assertEqual(in_words(15),'fifteen')
+        self.assertEqual(in_words(16), 'sixteen')
+        self.assertEqual(in_words(17), 'seventeen')
+        self.assertEqual(in_words(18), 'eighteen')
+        self.assertEqual(in_words(19), 'nineteen')
+        
+    def test_reads_tens(self):
+        self.assertEqual(in_words(20), 'twenty')
+        self.assertEqual(in_words(30), 'thirty')
+        self.assertEqual(in_words(40), 'forty')
+        self.assertEqual(in_words(50), 'fifty')
+        self.assertEqual(in_words(60), 'sixty')
+        self.assertEqual(in_words(70), 'seventy')
+        self.assertEqual(in_words(80), 'eighty')
+        self.assertEqual(in_words(90), 'ninety')
+        
+    def test_reads_various_under_100(self):
+        self.assertEqual(in_words(20), 'twenty')
+        self.assertEqual(in_words(77), 'seventy seven')
+        self.assertEqual(in_words(99), 'ninety nine')
+        
+    def test_reads_hundreds(self):
+        self.assertEqual(in_words(100), 'one hundred')
+        self.assertEqual(in_words(200), 'two hundred')
+        self.assertEqual(in_words(300), 'three hundred')
+        self.assertEqual(in_words(123), 'one hundred twenty three')
+        self.assertEqual(in_words(777), 'seven hundred seventy seven')
+        self.assertEqual(in_words(818), 'eight hundred eighteen')
+        self.assertEqual(in_words(512), 'five hundred twelve')
+        self.assertEqual(in_words(999), 'nine hundred ninety nine')
+        
+    def test_reads_thousands(self):
+        self.assertEqual(in_words(1000), 'one thousand')
+        self.assertEqual(in_words(32767),'thirty two thousand seven hundred sixty seven' )
+        self.assertEqual(in_words(32768), 'thirty two thousand seven hundred sixty eight')
+        
+    def test_reads_millions(self):
+        self.assertEqual(in_words(10000001), 'ten million one')
+        
+    def test_reads_billions(self):
+        self.assertEqual(in_words(1234567890), 'one billion two hundred thirty four million five hundred sixty seven thousand eight hundred ninety')
+        
+    def test_reads_trillions(self):
+        self.assertEqual(in_words(1000000000000), 'one trillion')
+        self.assertEqual(in_words(1000000000001), 'one trillion one')
+        self.assertEqual(in_words(1888259040036), 'one trillion eight hundred eighty eight billion two hundred fifty nine million forty thousand thirty six')
+        
+        
+
+
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+///
+
+/// Original Solution (Ruby) ///
+
+
+def name(magnitude)
+
+  if magnitude == 0
+      return "" 
+  elsif magnitude == 1
+        return "thousand"
+  elsif magnitude == 2
+      return "million"
+  elsif magnitude == 3
+      return "billion"
+  elsif magnitude == 4
+      return "trillion"
+  elsif magnitude == 5
+      return "quadrillion"
+  elsif magnitude == 6
+      return "quintillion"
+  elsif magnitude == 7
+      return "sextillion"
+  elsif magnitude == 8
+      return "septillion"
+  elsif magnitude == 9
+      return "octillion"
+  elsif magnitude == 10
+      return "nonillion"  
+  elsif magnitude == 11
+      return "decillion"
+  end        
+  
+end
+
+
+class Integer
+
+
+  def underthousand
+  num = self.to_s
+  if num.length == 1
+    if num == "0"
+      return "zero"
+    elsif num == "1"
+      return "one"
+    elsif num == "2"
+      return "two"
+    elsif num == "3"
+      return "three"
+    elsif num == "4"
+      return "four"
+    elsif num == "5"
+      return "five"
+    elsif num == "6"
+      return "six"
+    elsif num == "7"
+      return "seven"
+    elsif num == "8"
+      return "eight"
+    elsif num == "9"
+      return "nine"       
+    end
+    
+  elsif num.length == 2
+    tens = num[0]
+    ones = num[1]
+    if tens == "1"
+      if ones == "0"
+        return "ten"
+      elsif ones == "1"
+        return "eleven"
+      elsif ones == "2"
+        return "twelve"
+      elsif ones == "3"
+        return "thirteen"
+      elsif ones == "4"
+        return "fourteen"
+      elsif ones == "5"
+        return "fifteen"
+      elsif ones == "8"
+        return "eighteen"
+      else
+        return ones.to_i.underthousand + "teen"    
+      end          
+        
+    elsif tens == "2"
+      if ones == "0"
+          return "twenty"
+      else
+          return "twenty "+ ones.to_i.underthousand
+      end
+      elsif tens == "3"
+        if ones == "0"
+          return "thirty"
+        else
+            return "thirty " + ones.to_i.underthousand
+        end
+      elsif tens == "4"
+        if ones == "0"
+            return "forty"
+        else
+            return "forty " + ones.to_i.underthousand
+        end
+      elsif tens == "5"
+        if ones == "0"
+          return "fifty"
+        else
+          return "fifty " + ones.to_i.underthousand
+        end
+      elsif tens == "8"
+        if ones == "0"
+          return "eighty"
+        else
+          return "eighty " + ones.to_i.underthousand
+        end
+      else
+        if ones == "0"
+            return tens.to_i.underthousand + "ty"
+        else
+            return ((tens.to_i)*10).underthousand + " " + ones.to_i.underthousand
+        end                
+      end
+      
+    elsif num.length == 3
+      if num[1] == "0" and num[2] == "0"
+        return num[0].to_i.underthousand + " hundred"
+      elsif num[1] == "0"
+        return num[0].to_i.underthousand + " hundred"  + " " + num[2].to_i.underthousand 
+      else
+        return num[0].to_i.underthousand + " hundred"  + " " + num[1..-1].to_i.underthousand      
+      end
+      
+    end
+    
+    
+    
+  
+  end
+
+
+
+  def in_words    
+    num = self.to_s
+    num_digits = num.length
+    magnitude = num_digits/3    
+    revnum = num.reverse
+    segments = [] 
+    for k in (0...magnitude)      
+      segments << revnum[3*k...3*k + 3]
+    end
+    if num_digits % 3 != 0
+      segments << revnum[3*magnitude..-1]      
+    end
+              
+    
+    if magnitude == 0
+      segments = [revnum]    
+    end    
+    name_indices = []
+    for i in (0...segments.length)
+      if segments[i] != "000"
+        name_indices << i    
+      end
+    end    
+    def space_ifnec(i)
+      if  i == 0
+        ""
+      else
+        " "
+      end
+    end
+    names = name_indices.map {|i| segments[i].reverse.to_i.underthousand  + space_ifnec(i) + name(i)}    
+    revnames = names.reverse
+    number = revnames[0]    
+    for x in revnames[1..-1]
+      number = number + " " + x       
+    end    
+    return number
+    
+  
+  end
+
+end
+
+
+
+
+
+
+
+
+
+///
+
+/// Translated Solution (Python) ///
+
+
+def name(magnitude):
+    if magnitude == 0:
+        return "" 
+    elif magnitude == 1:
+          return "thousand"
+    elif magnitude == 2:
+        return "million"
+    elif magnitude == 3:
+        return "billion"
+    elif magnitude == 4:
+        return "trillion"
+    elif magnitude == 5:
+        return "quadrillion"
+    elif magnitude == 6:
+        return "quintillion"
+    elif magnitude == 7:
+        return "sextillion"
+    elif magnitude == 8:
+        return "septillion"
+    elif magnitude == 9:
+        return "octillion"
+    elif magnitude == 10:
+        return "nonillion"  
+    elif magnitude == 11:
+        return "decillion" 
+
+
+def underthousand(number):
+    num = str(number)
+    if len(num) == 1:
+        if num == "0":
+            return "zero"
+        elif num == "1":
+            return "one"
+        elif num == "2":
+            return "two"
+        elif num == "3":
+            return "three"
+        elif num == "4":
+            return "four"
+        elif num == "5":
+            return "five"
+        elif num == "6":
+            return "six"
+        elif num == "7":
+            return "seven"
+        elif num == "8":
+            return "eight"
+        elif num == "9":
+            return "nine"
+
+    elif len(num) == 2:
+        tens = num[0]
+        ones = num[1]
+        if tens == "1":
+            if ones == "0":
+                return "ten"
+            elif ones == "1":
+                return "eleven"
+            elif ones == "2":
+                return "twelve"
+            elif ones == "3":
+                return "thirteen"
+            elif ones == "4":
+                return "fourteen"
+            elif ones == "5":
+                return "fifteen"
+            elif ones == "6":
+                return "sixteen"
+            elif ones == "7":
+                return "seventeen"
+            elif ones == "8":
+                return "eighteen"
+            else:
+                return underthousand(int(ones)) + "teen"
+                
+        elif tens == "2":
+            if ones == "0":
+                return "twenty"
+            else:
+                return "twenty " + underthousand(int(ones))
+                
+        elif tens == "3":
+            if ones == "0":
+                return "thirty"
+            else:
+                return "thirty " + underthousand(int(ones))
+                
+        elif tens == "4":
+            if ones == "0":
+                return "forty"
+            else:
+                return "forty " + underthousand(int(ones))  
+
+        elif tens == "5":
+            if ones == "0":
+                return "fifty"
+            else:
+                return "fifty " + underthousand(int(ones))  
+
+        elif tens == "6":
+            if ones == "0":
+                return "sixty"
+            else:
+                return "sixty " + underthousand(int(ones))  
+
+        elif tens == "7":
+            if ones == "0":
+                return "seventy"
+            else:
+                return "seventy " + underthousand(int(ones))  
+
+        elif tens == "8":
+            if ones == "0":
+                return "eighty"
+            else:
+                return "eighty " + underthousand(int(ones))  
+
+        elif tens == "9":
+            if ones == "0":
+                return "ninety"
+            else:
+                return "ninety " + underthousand(int(ones))   
+
+    elif len(num) == 3:
+        if num[1] == "0" and num[2] == "0":
+            return underthousand(int(num[0])) + " hundred"
+        elif num[1] == "0":
+            return underthousand(int(num[0])) + " hundred" + " " + underthousand(int(num[2]))
+        else:
+            return underthousand(int(num[0])) + " hundred" + " " + underthousand(int(num[1:]))
+            
+            
+def in_words(number):
+    num = str(number)
+    num_digits = len(num)
+    magnitude = num_digits/3
+    revnum = num[::-1]
+    segments = []
+    for k in range(magnitude):
+        segments.append(revnum[3*k:3*k + 3])
+    if num_digits % 3 != 0:
+        segments.append(revnum[3*magnitude:])
+        
+    if magnitude == 0:
+        segments = [revnum]
+    name_indices = []
+    for i in range(len(segments)):
+        if segments[i] != "000":
+            name_indices.append(i)
+    
+    def space_ifnec(i):
+        if i == 0:
+            return "" 
+        else:
+            return " "
+
+    names = [underthousand(int(segments[i][::-1])) + space_ifnec(i) + name(i) for i in name_indices]  
+    revnames = names[::-1]
+    number = revnames[0]
+    for x in revnames[1:]:
+        number = number + " " + x 
+    return number          
+                 
+
+///
+
+
