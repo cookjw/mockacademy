@@ -1961,6 +1961,12 @@ def measure(function, timescount = 1):
 Lesson 7: Hello, friend!
 -----------------------------
 
+Lesson 7 is rather straightforward. About the only notable aspect is
+that in Python, instead of making a test for the existence of the
+Friend class, we simply import the class (obviously the import will
+fail if the class isn't there).
+
+
 /// Original Problem (Ruby / RSpec) ///
 
 require "friend"
