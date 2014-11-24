@@ -14,7 +14,7 @@ To learn more about this, I turned first to [this introductory talk by Carl Meye
 
 Suppose you'd like to create a "GitHub recommendation engine" -- a piece of software that will examine the GitHub repositories being followed by a particular user (say, you) and find additional repositories to recommend on the basis of their being followed by "similar" users. Suppose you define the "similarity score" between two users as the Jaccard index of their respective sets of followed repositories -- that is, the number of repositories they're both following, divided by the number of repositories that at least one of them is following. You might implement this naïvely as follows:
 
-/// Python: gitrecs.py ///
+/// Python: gitrecs.py /// 
 
 def similarity(watched1, watched2):
     """
