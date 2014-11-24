@@ -1712,6 +1712,8 @@ describe "Performance Monitor" do
   
 ///
 
+So...first we have to parse a string representing a time. Unsurprisingly, Python can do this to:
+
 
 /// Translated Problem (Python / unittest) ///
 
@@ -1728,6 +1730,8 @@ def fake_time():
 
 ///
 
+Our reasons for the renaming and inside-function-burying will (hopefully) become clear below. 
+
 ///...Original Problem (Ruby / RSpec)...///  
 
   it "takes about 0 seconds to run an empty block" do
@@ -1735,6 +1739,26 @@ def fake_time():
     end
     elapsed_time.should be_within(0.1).of(0)
   end
+  
+///
+
+///...Translated Problem (Python / unittest)...///
+
+
+class PerformanceMonitorTest(unittest.TestCase):    
+    def test_measure_01(self):    # it should take about 0 seconds to execute an empty function  
+        def f():
+            pass
+        elapsed_time = measure(f)
+        self.assertAlmostEqual(elapsed_time, 0.0, 1) 
+        
+///
+
+("_01" is added to the method to enforce the order in which the tests
+should be run -- apparently unittest runs them in lexicographical order.
+Weird.)
+
+///...Original Problem (Ruby / RSpec).../// 
 
   it "takes exactly 0 seconds to run an empty block (with stubs)" do
     Time.stub(:now) { @eleven_am }
@@ -1742,13 +1766,54 @@ def fake_time():
     end
     elapsed_time.should == 0
   end
+  
+///
+
+And here we see the "mocking"/"stubbing" in action: for the
+purpose of this test, our measure method is going to use 
+@eleven_am as the time indicated by now.
+
+Observe how we do the corresponding thing in Python: 
+
+///...Translated Problem (Python / unittest)...///
+
+    @mock.patch('time.time', fake_time)  # it should take exactly 0 seconds to execute an empty function (with mock) 
+    def test_measure_02_with_mock(self):        
+        def f():
+            pass
+        elapsed_time = measure(f)
+        self.assertEqual(elapsed_time, 0.0)   
+
+///
+
+Note the approximate specification for the elapsed time:
+
+///...Original Problem (Ruby / RSpec).../// 
 
   it "takes about 1 second to run a block that sleeps for 1 second" do
     elapsed_time = measure do
-      sleep 1
+      sleep 1s
     end
     elapsed_time.should be_within(0.1).of(1)
   end
+  
+  
+///
+
+///...Translated Problem (Python / unittest)...///     
+    
+        
+    def test_measure_03_sleep(self):   # it should take about 1 second to execute a function that sleeps for 1 second
+        def f():
+            time.sleep(1)
+        elapsed_time = measure(f)
+        self.assertAlmostEqual(elapsed_time, 1.0, 1)
+        
+///
+
+The remainder of both problem files:
+
+///...Original Problem (Ruby / RSpec)...///
 
   it "takes exactly 1 second to run a block that sleeps for 1 second (with stubs)" do
     fake_time = @eleven_am
@@ -1793,23 +1858,7 @@ end
 
 ///
 
-
-///...Translated Problem (Python / unittest)...///
-
-
-class PerformanceMonitorTest(unittest.TestCase):    
-    def test_measure_01(self):    # it should take about 0 seconds to execute an empty function  
-        def f():
-            pass
-        elapsed_time = measure(f)
-        self.assertAlmostEqual(elapsed_time, 0.0, 1) 
-    
-    @mock.patch('time.time', fake_time)  # it should take exactly 0 seconds to execute an empty function (with mock) 
-    def test_measure_02_with_mock(self):        
-        def f():
-            pass
-        elapsed_time = measure(f)
-        self.assertEqual(elapsed_time, 0.0)        
+///...Translated Problem (Python / unittest)...///     
     
         
     def test_measure_03_sleep(self):   # it should take about 1 second to execute a function that sleeps for 1 second
@@ -1865,7 +1914,7 @@ if __name__ == '__main__':
 
 ///
 
-
+And the corresponding solutions:
 
 /// Original Solution (Ruby) ///
 
