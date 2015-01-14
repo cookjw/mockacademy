@@ -2,9 +2,23 @@ Day 10
 ---------
 
 
-I'm departing from the planned order and doing Day 10 "immediately" after Day 6. Mostly, this is because my plans for Days 7 and 8 require some tangential fiddling to make the original Ruby files work on my (Windows) computer, and I didn't want to do Day 9 until I had done Days 7 and 8 (which are really one day for my purposes, so I should be writing "Days-7-and-8"). (Why am I using Windows, you ask? Because that's what comes installed on laptops you buy at Walmart.) I do plan to do that tangential fiddling eventually, to show how clever and determined (and platform-knowledgeable) I am, but right now I'm more interested in not breaking my flow and continuing to keep myself entertained by learning novel, centrally-relevant topics. (Also, why be so boringly conventional and do everything in order, anyway? Why not avail myself of the unique advantages of working independently?)
+I'm departing from the planned order and doing Day 10 "immediately"
+after Day 6. Mostly, this is because my plans for Days 7 and 8 require
+some tangential fiddling to make the original Ruby files work on my 
+(Windows) computer, and I didn't want to do Day 9 until I had done 
+Days 7 and 8 (which are really one day for my purposes, so I should
+be writing "Days-7-and-8"). (Why am I using Windows, you ask? Because
+that's what comes installed on laptops you buy at Walmart.) I do plan
+to do that tangential fiddling eventually, to show how clever and
+determined (and platform-knowledgeable) I am, but right now I'm more
+interested in not breaking my flow and continuing to keep myself
+entertained by learning novel, centrally-relevant topics. (Also, why be
+so boringly conventional and do everything in order, anyway? Why not
+avail myself of the unique advantages of working independently?)
 
-Day 10, in particular, involves a topic that is quite novel for me indeed: automated testing. Zack describes what this is about in his [Week 2 blog post](http://zackmdavis.net/blog/2013/09/app-academy-diary-week-two/):
+Day 10, in particular, involves a topic that is quite novel for me
+indeed: automated testing. Zack describes what this is about in his
+[Week 2 blog post](http://zackmdavis.net/blog/2013/09/app-academy-diary-week-two/):
 
 "Novice programmers test their programs by running them and seeing if they give the expected results, which might be okay when your program is small and no one actually uses it, but then what happens when you wake up one day and you're in charge of maintaining a twenty-thousand-line application that people really depend on?
 

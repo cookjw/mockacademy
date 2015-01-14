@@ -1,0 +1,12 @@
+"Mock Academy", personal App Academy emulation, Week 6
+
+Day 27: JavaScript exercises
+
+Day 28: Pales
+
+Day 29: Asteroids clone using HTML canvas
+
+Day 30: towers of Hanoi UI; Snake game using jQuery/DOM manipulation
+
+Day 31: Pales
+

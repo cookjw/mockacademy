@@ -1,0 +1,3 @@
+"Mock Academy", personal App Academy emulation, Week 9
+
+Days 42, 43, 44, 45, 46: final project

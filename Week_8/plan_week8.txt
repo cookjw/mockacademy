@@ -1,0 +1,6 @@
+"Mock Academy", personal App Academy emulation, Week 8
+
+Day 37:  chat server in Node using WebSockets
+
+Days 38, 39, 40, 41: final project, Pales
+

@@ -1,0 +1,12 @@
+"Mock Academy", personal App Academy emulation, Week 4
+
+Day 17: SQL practice
+
+Day 18: ice-cream finder, Twitter client
+
+Day 19: cat rental site (or substitute)
+
+Day 20: cat rental cont'd
+
+Day 21: Heroku
+

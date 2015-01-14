@@ -1,0 +1,11 @@
+"Mock Academy", personal App Academy emulation, Week 7
+
+Day 32: client-side MVC
+
+Days 33: Backbone.js
+
+Day 34: Pales
+
+Day 35: make-a-Backbone-app exercise
+
+Day 36: TBD

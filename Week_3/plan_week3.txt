@@ -8,5 +8,5 @@ Day 14: URL shortener
 
 Day 15: polling app
 
-Day 16: "SedentaryRecord" (translation in reverse direction?)
+Day 16: "SedentaryRecord" (translation in reverse direction?) (see zackmdavis.net/blog/2013/09/app-academy-diary-week-three/)
 

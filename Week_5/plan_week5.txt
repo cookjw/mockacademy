@@ -1,0 +1,11 @@
+"Mock Academy", personal App Academy emulation, Week 5
+
+Day 22: application to keep track of musical artists and their associated albums and tracks; authentication; ActionMailer
+
+Day 23: Friend Circle, "a Google+ish thing where users can put other users in circles and share posts with them."
+
+Day 24:  "Ruby on Wires" (or Python version, "Pales")
+
+Day 25: Reddit-like thing, with tests; "[use] JavaScript and jQuery to get comment forms to appear on the page in response to a user clicking 'Reply'"
+
+Day 26: integration testing
