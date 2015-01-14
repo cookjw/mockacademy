@@ -1,0 +1,12 @@
+"Mock Academy", personal App Academy emulation, Week 3
+
+Day 12: Crazy Eights (with tests)
+
+Day 13: program for interacting with database
+
+Day 14: URL shortener
+
+Day 15: polling app
+
+Day 16: "SedentaryRecord" (translation in reverse direction?)
+
