@@ -83,8 +83,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-from app.models import ApplicationState
 
-if not ApplicationState.objects.count():
-    ApplicationState.objects.create()
     

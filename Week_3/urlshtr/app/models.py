@@ -5,7 +5,6 @@ class ShortenedURL(models.Model):
     shrtd = models.CharField(max_length=16)
     
 
-class ApplicationState(models.Model):
-    next_id = models.IntegerField(default=1)
+
     
 
