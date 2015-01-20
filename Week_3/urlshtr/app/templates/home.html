@@ -1,9 +1,20 @@
-Welcome to our URL Shortener!
+{% load staticfiles %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'app/style.css' %}" />
+
+<title>URL Shortener </title>
+<body>
+<div id="welcomebox">
+<span id="welcome">Welcome to our URL Shortener!</span>
+</div>
 
 <p>
 
-<form action="shorten/" method="POST">
+<div id="formbox">
+<form action="shorten/" method="POST" id="form">
 URL:
-<input type="text" name="url">
-<input type="submit" value="Submit">
+<input type="text" name="url" id="textarea"><br>
+<input type="submit" value="Submit" id="submit">
 </form>
+</div>
+</body>

@@ -1,0 +1,28 @@
+#welcome{
+text-align: center;
+color: blue; 
+font-size: 20pt;
+
+}
+
+#welcomebox{
+text-align: center;
+}
+
+#formbox{
+margin-left: 600px;
+margin-right: 670px;
+}
+
+#form{
+width: 500px;
+}
+
+#textarea{
+width: 300px;
+}
+
+#submit{
+margin-top: 20px;
+margin-left: 150px
+}
