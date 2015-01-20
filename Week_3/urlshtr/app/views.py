@@ -11,7 +11,7 @@ def home(request):
     return render(request, 'home.html')    
  
 
-@csrf_exempt
+
 def shorten(request):
     if request.method == "POST":
         url = request.POST["url"]

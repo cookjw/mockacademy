@@ -12,6 +12,7 @@
 
 <div id="formbox">
 <form action="shorten/" method="POST" id="form">
+{% csrf_token %}
 URL:
 <input type="text" name="url" id="textarea"><br>
 <input type="submit" value="Submit" id="submit">
