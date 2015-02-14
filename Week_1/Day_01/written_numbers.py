@@ -1,7 +1,9 @@
 #Spelling out numbers:
     #Divide digits by 3, find remainder
-    #Determine appropriate magnitude (which -illion leads) (will go to decillions)
-    #List descending magnitudes (...trillion, billion, million, thousand, ---), skipping "000"'s
+    #Determine appropriate magnitude (which -illion leads)
+    #(will go to decillions)
+    #List descending magnitudes
+    #(...trillion, billion, million, thousand, ---), skipping "000"'s
     
 #CURRENT STATUS: improved, but will await unit testing before pronouncing further.
 
@@ -31,7 +33,9 @@ def name(magnitude):
     if magnitude == 11:
         return "decillion"    
 
-def underthousand(n): #spelling out numbers under 1000, taken from my solution to Project Euler problem 17.
+def underthousand(n): 
+    # spelling out numbers under 1000,
+    # taken from my solution to Project Euler problem 17.
     num = str(n)
     if len(num) == 1:
         if num == "0":
@@ -103,14 +107,23 @@ def underthousand(n): #spelling out numbers under 1000, taken from my solution t
             if ones == "0":
                 return underthousand(int(tens))+ "ty"
             else:
-                return underthousand(int(tens)*10) + " " + underthousand(int(ones))
+                return (
+                underthousand(int(tens)*10) + 
+                " " + underthousand(int(ones))
+                )
     if len(num) == 3:
         if num[1] == "0" and num[2] == "0":
             return underthousand(int(num[0])) + " hundred"
         elif num[1] == "0":
-            return underthousand(int(num[0])) + " hundred" + " and " + underthousand(int(num[2]))
+            return (
+            underthousand(int(num[0])) + " hundred" + " and " + 
+            underthousand(int(num[2]))
+            )
         else:
-            return underthousand(int(num[0])) + " hundred" + " and " + underthousand(num[1:])
+            return (
+            underthousand(int(num[0])) + " hundred" + " and " + 
+            underthousand(num[1:])
+            )
         
 def spellout(n): 
     num = str(n)    
@@ -128,7 +141,10 @@ def spellout(n):
             return ""
         else:
             return " "      
-    names = [underthousand(int(segments[i][::-1])) + space_ifnec(i) + name(i) for i in range(len(segments)) if segments[i]!= "000"]
+    names = [
+    underthousand(int(segments[i][::-1])) + space_ifnec(i) + name(i)
+    for i in range(len(segments)) if segments[i]!= "000"
+    ]
     revnames = names[::-1]
     number = revnames[0]
     for x in revnames[1:]:
