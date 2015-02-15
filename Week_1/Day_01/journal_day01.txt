@@ -72,10 +72,34 @@ is to inherit from the class in question:
 /// Python ///
 
 class Array(list):
-    def __init__(self, *values):
-        self.values = values
+     def __new__(cls, values): 
+         return list.__new__(cls, values)
+     
+     def sum_squares(self):
+         sum = 0
+         for number in self:
+             sum += number*number
+         return sum
         
 
 ///
 
+(See https://www.python.org/download/releases/2.2/descrintro/#__new__ 
+for explanation of the __new__ method.)
 
+This lets you do:
+
+/// Interactive Interpreter (Python) ///
+
+>>> x = Array([1,2,3])
+>>> x
+[1, 2, 3]
+>>> x.sum_squares()
+14
+
+///
+
+(Of course, in real life, one would probably just prefer to define an
+ordinary 'outside' function sum_squares(list), as opposed to a method
+of the relevant class. Cf. Python's built-in sum(list), max(list), etc.
+In Ruby, habits are different.)
