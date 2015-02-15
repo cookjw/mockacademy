@@ -14,11 +14,10 @@ are:
 
 Monkeypatching the list type?
 
-A recurring theme of this course will, naturally enough, be the
-differences between Python and Ruby. Our very first topic provides
-an example. 
+A recurring theme of this course will be the differences between Python
+and Ruby. Our very first topic provides an example. 
 
-In Ruby, you're allowed to take built-in data types (a.k.a. classes), 
+In Ruby, you're allowed to take built-in data types
 and add your own new methods to them. This is called "monkeypatching". 
 For example, suppose you'd like a method to sum the squares of the 
 elements of a Ruby array (at least when the elements are numbers).
@@ -49,7 +48,7 @@ irb(main):016:0> [1,2,3].sum_squares
 
 
 You can't do this in Python, unfortunately. If you try to "open up" 
-a built-in class,you'll just end up creating a new class with the
+a built-in class, you'll just end up creating a new class with the
 same name:
 
 /// Interactive Interpreter (Python) ///
@@ -85,7 +84,9 @@ class Array(list):
 ///
 
 (See https://www.python.org/download/releases/2.2/descrintro/#__new__ 
-for explanation of the __new__ method.)
+for explanation of the __new__ method. The point here is that it allows
+us to make an instance of our new Array class by passing in a Python
+list, as in x = Array([1,2,3]).)
 
 This lets you do:
 
@@ -99,7 +100,28 @@ This lets you do:
 
 ///
 
-(Of course, in real life, one would probably just prefer to define an
-ordinary 'outside' function sum_squares(list), as opposed to a method
-of the relevant class. Cf. Python's built-in sum(list), max(list), etc.
-In Ruby, habits are different.)
+Of course, in real life, one would probably just prefer to define an
+ordinary 'outside' function sum_squares(my_list), as opposed to a method
+of the relevant class. Cf. Python's built-in sum(my_list), max(my_list), 
+etc. In Ruby, habits are different.
+
+Uniqness
+
+With that in mind, let's implement the functionality of Ruby's uniq
+method on arrays, which eliminates duplicate elements. 
+
+/// Python ///
+
+def uniq(my_list):
+    for item in my_list:
+        while my_list.count(item) > 1:
+            first_index = my_list.index(item)
+            second_index = my_list.index(item, first_index+1)
+            del my_list[second_index]
+    return my_list
+    
+
+///
+
+
+
