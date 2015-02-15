@@ -242,9 +242,78 @@ tricks along the way.
 
 What is a set? Answer: an unordered collection of items. What can we do
 with such a thing? We might want to add items and remove them, to begin
-with. It turns out that this can be done in constant time via the 
+with. We'll take our specifications from a recent practice interview I
+participated in: we should be able to add and remove items, as well as 
+randomly sample them.
+
+It turns out that this can be done in constant time via the 
 technique of "hashing". For our purposes here, this translates to 
-"using dictionaries". 
+"using dictionaries". The code looks like this:
+
+/// Python: Set.py ///
+
+from random import choice
+
+class Set:
+    def __init__(self, *items):
+        self.items = {}
+        self.array = []
+        for item in items:
+            self.add(item)
+        
+    def __repr__(self):
+        return "Set: " + str(self.array)
+        
+    def add(self, item):
+        self.array.append(item)
+        self.items[item] = len(self.array) - 1
+        
+    def remove(self, item):
+        index = self.items[item]
+        last_item = self.array[-1]
+        current_item = self.array[index]
+        assert current_item == item
+        self.array[index] = last_item
+        self.items[last_item] = index
+        self.array[-1] = current_item
+        self.items[current_item] = len(self.array) - 1
+        del self.array[-1]
+        del self.items[item]
+        
+    def sample(self):
+        return choice(self.array)
+
+///
+
+Testing:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.6 (default, Mar 22 2014, 22:59:56) 
+[GCC 4.8.2] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from Set import Set
+>>> my_set = Set(1,2,3,4,5,6)
+>>> my_set
+Set: [1, 2, 3, 4, 5, 6]
+>>> my_set.sample()
+6
+>>> my_set.remove(6)
+>>> my_set
+Set: [1, 2, 3, 4, 5]
+>>> my_set.sample()
+2
+>>> my_set.remove(2)
+>>> my_set
+Set: [1, 5, 3, 4]
+>>> my_set.sample()
+3
+>>> my_set.remove(3)
+>>> my_set
+Set: [1, 5, 4]
+
+///
+
 
 
 
