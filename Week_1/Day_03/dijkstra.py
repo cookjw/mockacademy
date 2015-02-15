@@ -40,7 +40,10 @@ class Node:
         self.index = graph.nodelist.index(self)
         
     def adjacent_nodes(self):         
-        return {node for node in self.graph.nodelist if (self, node) in self.graph.edgedict}        
+        return {
+        node for node in self.graph.nodelist if (self,
+        node) in self.graph.edgedict
+        }        
     
     # def connect(self, othernode, weight=None):
         # if othernode in self.graph:           
@@ -80,9 +83,17 @@ def dijkstra(graph, origin_index):
         # print [node.index for node in marked_nodes]
         # print [node.index for node in set(nodes)]        
         # print graph.node_number(a).adjacent_nodes()       
-        distance_a = {node:graph.edge(graph.node_number(a), node).weight for node in graph.node_number(a).adjacent_nodes()}
+        distance_a = {
+        node:graph.edge(
+        graph.node_number(a), node
+        ).weight for node in graph.node_number(a).adjacent_nodes()
+        }
         # print distance_a        
-        V = {node for node in nodes if (node in graph.node_number(a).adjacent_nodes()) and (not (node in marked_nodes))}
+        V = {
+        node for node in nodes if (
+        node in graph.node_number(a).adjacent_nodes()
+        ) and (not (node in marked_nodes))
+        }
         # print V
         for node in V:
             # print D[node.index]
@@ -91,8 +102,12 @@ def dijkstra(graph, origin_index):
         marked_nodes.add(graph.node_number(a))  
         if marked_nodes != set(nodes):  
             # print [i for i in range(len(D)) if not nodes[i] in marked_nodes]
-            E = [D[i] for i in range(len(D)) if not nodes[i] in marked_nodes]
-            F = {i:D[i] for i in range(len(D)) if not nodes[i] in marked_nodes}            
+            E = [
+            D[i] for i in range(len(D)) if not nodes[i] in marked_nodes
+            ]
+            F = {
+            i:D[i] for i in range(len(D)) if not nodes[i] in marked_nodes
+            }            
             for i in F:
                 if D[i] == min(E):
                     a = i
@@ -107,11 +122,21 @@ graph = Graph(N)
 
 for index in range(N): 
 
-    input = raw_input("Enter the nodes adjacent to (i.e. that can be reached directly from) Node {number}, separated only by commas. (If none, enter {number}.) \n".format(number = index+1))
+    input = raw_input(
+    "Enter the nodes adjacent to (i.e. that can be reached directly from)\
+    Node {number}, separated only by commas. \
+    (If none, enter {number}.) \n".format(number = index+1)
+    )
     adjacent_node_indices = [int(n) - 1 for n in input.split(',')]
     for n in adjacent_node_indices:
-        weight = int(raw_input("Enter the distance from Node {first} to Node {second}. (If same, enter 0.) \n".format(first = index+1, second = n+1)))
-        graph.createedge(graph.node_number(index), graph.node_number(n), weight)
+        weight = int(
+        raw_input(
+        "Enter the distance from Node {first} to Node {second}.\
+        (If same, enter 0.) \n".format(first = index+1, second = n+1))
+        )
+        graph.createedge(
+        graph.node_number(index), graph.node_number(n), weight
+        )
         # print graph.node_number(index).adjacent_nodes
         
         
@@ -120,7 +145,10 @@ origin_index = int(raw_input("Enter the starting node. \n")) - 1
 results = dijkstra(graph, origin_index)
 
 for i in range(len(results)):
-    print "The distance from Node {origin} to Node {destination} is {result}".format(origin = origin_index +1, destination = i+1, result = results[i])
+    print "The distance from Node {origin} to Node {destination}\
+    is {result}".format(
+    origin = origin_index +1, destination = i+1, result = results[i]
+    )
 
 
         

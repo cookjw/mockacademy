@@ -1,5 +1,7 @@
-# Word Chains: "Find a way to mutate a dictionary word into another of the same length by changing one letter at a time,
-# with all the intermediaries also being valid words (e.g., *duck* to unprintable to *funk* to *fund*).
+# Word Chains: "Find a way to mutate a dictionary word into another of 
+# the same length by changing one letter at a time,
+# with all the intermediaries also being valid words
+# (e.g., *duck* to unprintable to *funk* to *fund*).
 
 # CURRENT STATUS: (apparent) TRIUMPH! 
 

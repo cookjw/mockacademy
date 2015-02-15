@@ -60,7 +60,8 @@ while not (winning_condition() or losing_condition()):
     print "\n"
     print "Counter: " + str(counter) + " of 10"   
     guess = raw_input("Guess a letter. \n")
-    reveal = revealed_letters[:len(revealed_letters)] # avoid binding one list to another, otherwise changing one will change the other!
+    reveal = revealed_letters[:len(revealed_letters)]
+    # avoid binding one list to another, otherwise changing one will change the other!
     for i in range(len(word)):    
         if word[i] == guess:
             reveal[i] = guess
