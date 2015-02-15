@@ -233,6 +233,21 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ///
 
+[Babbitt]() would be proud
+-----------------------
+
+Python comes equipped with a set data type, but we will re-implement it
+(or, a basic version thereof, anyway) ourselves, learning some CS
+tricks along the way.
+
+What is a set? Answer: an unordered collection of items. What can we do
+with such a thing? We might want to add items and remove them, to begin
+with. It turns out that this can be done in constant time via the 
+technique of "hashing". For our purposes here, this translates to 
+"using dictionaries". 
+
+
+
 
 
 
