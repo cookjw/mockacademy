@@ -1,0 +1,81 @@
+So it begins!
+
+Our tasks for the first "day" of Mockacademy, adopted from [Zack] and [Julie](http://julieatappacademy.tumblr.com/post/67439091665/week-1-day-1)'s blogs,
+are:
+
+- the Python analogue of monkeypatching Ruby's Array type, adding specifically:
+-- the "uniq" method, which eliminates duplicate elements of an array;
+- a function that converts a number to another base;
+- an implementation of the Set data type;
+- a playable Towers of Hanoi game
+- a function that accepts an integer and returns its name in words
+(so e.g. 259123 becomes "two hundred fifty nine thousand one hundred twenty three")
+
+
+Monkeypatching the list type?
+
+A recurring theme of this course will, naturally enough, be the
+differences between Python and Ruby. Our very first topic provides
+an example. 
+
+In Ruby, you're allowed to take built-in data types (a.k.a. classes), 
+and add your own new methods to them. This is called "monkeypatching". 
+For example, suppose you'd like a method to sum the squares of the 
+elements of a Ruby array (at least when the elements are numbers).
+You can just open up the Array class and add it:
+
+/// Ruby ///
+
+class Array
+
+  def sum_squares
+    sum = 0
+    for number in self
+      sum += number*number      
+    end
+    return sum    
+  end
+
+///
+
+You can then do:
+
+/// Interactive Interpreter (Ruby) ///
+
+irb(main):016:0> [1,2,3].sum_squares
+=> 14
+
+///
+
+
+You can't do this in Python, unfortunately. If you try to "open up" 
+a built-in class,you'll just end up creating a new class with the
+same name:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.2 (default, Jun 12 2011, 15:08:59) [MSC v.1500 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> isinstance([1,2,3], list)
+True
+>>> class list:
+...     pass
+...
+>>> isinstance([1,2,3], list)
+False
+
+///
+
+The closest thing we can do, as we're told on [Stack Overflow](http://stackoverflow.com/a/193660), 
+is to inherit from the class in question:
+
+/// Python ///
+
+class Array(list):
+    def __init__(self, *values):
+        self.values = values
+        
+
+///
+
+
