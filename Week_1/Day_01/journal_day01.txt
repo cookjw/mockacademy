@@ -13,6 +13,7 @@ are:
 
 
 Monkeypatching the list type?
+------------------------------
 
 A recurring theme of this course will be the differences between Python
 and Ruby. Our very first topic provides an example. 
@@ -106,11 +107,12 @@ of the relevant class. Cf. Python's built-in sum(my_list), max(my_list),
 etc. In Ruby, habits are different.
 
 Uniqness
+----------
 
 With that in mind, let's implement the functionality of Ruby's uniq
 method on arrays, which eliminates duplicate elements. 
 
-/// Python ///
+/// Python: uniq.py ///
 
 def uniq(my_list):
     for item in my_list:
@@ -141,6 +143,96 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>>
 
 ///
+
+All Your Base
+-------------
+
+Next, we'll implement [base] conversion of numbers. According to 
+[Julie](), the name of her method for doing this in Ruby was
+num_to_s. Anyone familiar with Ruby will recognize "to_s" as the method
+that converts to a string, e.g.
+
+/// Interactive Interpreter (Ruby) ///
+
+irb(main):001:0> 123.to_s
+=> "123"
+
+/// 
+
+What the same "num_to_s" suggests, therefore, is that the output of our
+base-conversion function should be in string form. (I don't actually know
+whether this was the intention behind the name; "s" could just be a 
+variable representing the target base for all I know. But string 
+representation of the output seems appropriate in any case.)
+
+
+
+/// Python: base.py ///
+
+from string import ascii_uppercase
+
+def digit(number):
+    """
+    Converts number to 'digit', i.e. appropriate single-character 
+    string ('0' through '9', or 'A' through 'Z' for bases > 10)
+    """
+    if 0 <= number <= 9:
+        return str(number)
+    elif 10 <= number < 36:
+        return ascii_uppercase[number - 10]
+    else:
+        raise Exception("Wrong kind of input for digit function")
+        
+def highest_power(number, base):
+    """
+    Returns highest power of base that is <= number
+    (i.e., the floor function of the logarithm of number to base base)
+    """
+    exponent = 0
+    while base**(exponent) <= number:
+        exponent += 1
+    return exponent - 1
+    
+
+def convert_base(number, base):
+    """
+    Converts number (integer) to string representation in new base
+    """
+    result = ""
+    n = highest_power(number, base)
+    x = number
+    while n >= 0:
+        quotient = x // base**n # Integer division!
+        remainder = x % base**n
+        place_value = digit(quotient)
+        result += place_value
+        x = remainder
+        n -= 1
+    return result
+
+///
+
+
+In action:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.2 (default, Jun 12 2011, 15:08:59) [MSC v.1500 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from base import convert_base
+>>> convert_base(2, 2)
+'10'
+>>> convert_base(144, 12)
+'100'
+>>> convert_base(144, 23)
+'66'
+>>> convert_base(144, 29)
+'4S'
+>>> convert_base(11, 12)
+'B'
+
+///
+
 
 
 
