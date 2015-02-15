@@ -31,7 +31,7 @@ def convert_base(number, base):
     n = highest_power(number, base)
     x = number
     while n >= 0:
-        quotient = x // base**n # Integer division!
+        quotient = x // base**n # Integer division, even in Python 3!
         remainder = x % base**n
         place_value = digit(quotient)
         result += place_value
