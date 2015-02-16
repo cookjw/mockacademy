@@ -147,7 +147,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 All Your Base
 -------------
 
-Next, we'll implement [base] conversion of numbers. According to 
+Next, we'll implement [base]() conversion of numbers. According to 
 [Julie](), the name of her method for doing this in Ruby was
 num_to_s. Anyone familiar with Ruby will recognize "to_s" as the method
 that converts to a string, e.g.
@@ -233,10 +233,196 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ///
 
-[Babbitt](http://en.wikipedia.org/wiki/All_Set_%28Babbitt%29) would be proud
----------------------------------------------------------------------------
 
-Python comes equipped with a set data type, but in this section we'll
-reimplement it ourselves, learning some CS tricks along the way.
+[Babbitt](http://en.wikipedia.org/wiki/All_Set_(Babbitt)) would be proud
+-----------------------
+
+Python comes equipped with a set data type, but we will re-implement it
+(or, a basic version thereof, anyway) ourselves, learning some CS
+tricks along the way.
+
+What is a set? Answer: an unordered collection of items. What can we do
+with such a thing? We might want to add items and remove them, to begin
+with. We'll take our specifications from a recent practice interview I
+participated in: we should be able to add and remove items, as well as 
+randomly sample them.
+
+It turns out that this can be done in constant time via the 
+technique of "hashing". For our purposes here, this translates to 
+"using dictionaries". The code looks like this:
+
+/// Python: Set.py ///
+
+from random import choice
+
+class Set:
+    def __init__(self, *items):
+        self.items = {}
+        self.array = []
+        for item in items:
+            self.add(item)
+        
+    def __repr__(self):
+        return "Set: " + str(self.array)
+        
+    def add(self, item):
+        self.array.append(item)
+        self.items[item] = len(self.array) - 1
+        
+    def remove(self, item):
+        index = self.items[item]
+        last_item = self.array[-1]
+        current_item = self.array[index]
+        assert current_item == item
+        self.array[index] = last_item
+        self.items[last_item] = index
+        self.array[-1] = current_item
+        self.items[current_item] = len(self.array) - 1
+        del self.array[-1]
+        del self.items[item]
+        
+    def sample(self):
+        return choice(self.array)
+
+///
+
+Testing:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.6 (default, Mar 22 2014, 22:59:56) 
+[GCC 4.8.2] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from Set import Set
+>>> my_set = Set(1,2,3,4,5,6)
+>>> my_set
+Set: [1, 2, 3, 4, 5, 6]
+>>> my_set.sample()
+6
+>>> my_set.remove(6)
+>>> my_set
+Set: [1, 2, 3, 4, 5]
+>>> my_set.sample()
+2
+>>> my_set.remove(2)
+>>> my_set
+Set: [1, 5, 3, 4]
+>>> my_set.sample()
+3
+>>> my_set.remove(3)
+>>> my_set
+Set: [1, 5, 4]
+
+///
+
+Towers of Hanoi
+-----------------
+
+Next, we make a playable [Towers of Hanoi](http://en.wikipedia.org/wiki/Tower_of_Hanoi) game.
+
+When I originally did these exercises last year, I didn't have much 
+familiarity with Python's built-in operations on lists (this was to
+some extent intentional), so I wrote my own "listoperations" module:
+
+/// listoperations.py ///
+
+def checkorder(somelist):
+        somelength = len(somelist)
+        rightorder = True
+        for index in range(somelength - 1):
+            if somelist[index] <= somelist[index + 1]:
+                continue
+            else:
+                rightorder = False
+                break 
+        return rightorder 
+
+
+def sortlist(list):
+    length = len(list)       
+    while checkorder(list) == False:     
+        for index in range(length - 1):
+            if list[index] <= list[index + 1]:
+                continue
+            else:
+                a = list[index]
+                b = list[index + 1]
+                list[index] = b
+                list[index + 1] = a
+                        
+    return list
+
+
+def listmax(list):
+    newlist = sortlist(list)
+    maxindex = len(newlist) - 1
+    return newlist[maxindex]
+    
+def listsum(list):
+    length = len(list)
+    total = 0
+    for i in range(length):
+        total = total+list[i]
+    return total
+    
+def listprod(list):
+    length = len(list)
+    product = list[0]
+    for i in range(1,length):
+        product = product*list[i]
+    return product
+
+def listcount(list, item):
+    L = []
+    for x in list:
+        if x == item:
+            L.append(x)
+    return len(L)       
+
+def eliminate_duplicates(list):
+	for item in list:
+		while listcount(list, item) > 1:
+		    list.remove(item)
+	return list
+    
+    
+def getindices(item, list):
+    listlength = len(list)
+    L = []
+    for index in range(listlength):
+        if list[index] == item:
+            L.append(index)
+    return L
+    
+def removeitem(item, list): #returns result of removing item from list
+    L = []
+    for x in list:
+        if x != item:
+            L.append(x)
+    return L
+    
+def removeitemindex(index, list):
+    L = []
+    for i in range(len(list)):
+        if i != index:
+            L.append(list[i])
+    return L
+        
+    
+    
+    
+def removefrom(list1, list2): #returns result of removing list2 from list1    
+    L = list1
+    for x in list2:        
+        if x in L:
+           L = removeitem(x,L)    
+    return L
+    
+
+///
+
+
+
+
 
 
