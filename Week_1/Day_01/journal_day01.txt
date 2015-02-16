@@ -421,8 +421,370 @@ def removefrom(list1, list2): #returns result of removing list2 from list1
 
 ///
 
+I used the functions from this module to (among other things) write
+a Towers of Hanoi game: 
+
+/// Python: hanoi.py ///
+
+#Towers of Hanoi game
+
+#Wikipedia:
+# "The objective of the puzzle is to move the entire stack to another
+# rod, obeying the following simple rules:
+# "1. Only one disk can be moved at a time.
+# "2. Each move consists of taking the upper disk from one of the stacks
+# and placing it on top of another stack i.e. a disk can only be moved if
+# it is the uppermost disk on a stack.
+# "3. No disk may be placed on top of a smaller disk."
+
+#Rods labeled R_1,...,R_m.
+#Disks labeled D_1,...D_n.
+#Each rod has slots S_1,...,S_n for disks.
+
+#Winning condition: all slots occupied on non-starting rod.
+
+#Operation User Can Perform: move disk D_k from slot (R_i, S_k) to slot
+# (R_j, S_k)
+#Restriction: (R_i,S_K) and (R_j,S_K) must be unoccupied for K < k. 
+
+#Rule 1 is satisfied by definition of Operation User Can Perform.
+#Rule 2 is satisfied by Restriction.
+#Rule 3 is satisfied by having designated slots on each rod for each
+# disk.
+
+#Game setup:
+#Prompt: "Enter number of rods." 
+#Prompt: "Enter number of disks."
+#Prompt: "Enter starting rod."
+
+#Game status:
+#List of occupied slots.
+#Display: "Rod i: [list slot numbers]"
+
+#Game play:
+#Prompt: "Choose a rod to move disk from."
+#Prompt: "Choose a rod to move disk to."
+
+import listoperations
+
+number_of_rods = int(raw_input("Enter number of rods.\n"))
+number_of_disks = int(raw_input("Enter number of disks. \n"))
+starting_rod = int(raw_input("Enter starting rod.\n")) - 1
+
+#Inital setup:
+rods = []
+for i in range(number_of_rods):
+    rods.append([])
+    for k in range(number_of_disks):
+        if i == starting_rod:
+            rods[i].append(1)
+        else:
+            rods[i].append(0)
+            
+#result of removing starting rod from rod list            
+other_rods = listoperations.removeitemindex(starting_rod, rods) 
 
 
 
+            
+def off_of_starting_rod():
+   #Tests whether disks have been removed from starting rod.
+    status = True
+    for k in range(number_of_disks):
+        if rods[starting_rod][k] == 1:
+            status = False
+            break            
+        else:
+            continue
+    return status
+    
+    
+def winning_condition():    
+    if off_of_starting_rod() == True:             
+        for i in range(len(other_rods)):       
+            status = True
+            current_candidate = other_rods[i]
+            other_other_rods = listoperations.removeitemindex(
+                i, other_rods
+            )            
+            for k in range(number_of_disks):
+                
+                if current_candidate[k] == 0:
+                    
+                    status = False                        
+            if status == True:
+                
+                for j in range(len(other_other_rods)):
+                    
+                    for k in range(number_of_disks):
+                        
+                        if other_other_rods[j][k] == 1:
+                            #
+                            status = False
+                            break
+                            break 
+                break
+        
+        return status
+                       
+     
+          
+    else:             
+        return False  
+               
+        
+            
+while winning_condition() == False:       
+    for i in range(len(rods)):
+        j = i+1
+        print "Rod %s :" %j + " " + str(
+            [k+1 for k in range(number_of_disks) if rods[i][k] == 1]
+            )
+    origin_rod = int(raw_input("Choose a rod to move disk from. \n")) - 1   
+    topdisk = None
+    for K in range(number_of_disks):
+        if rods[origin_rod][K] == 1:
+            topdisk = K
+            break
+    if topdisk == None:
+        print "Sorry, no disks on that rod."        
+    else:        
+        destination_rod = int(
+            raw_input("Choose a rod to move disk to. \n")
+            ) - 1
+        eligible = True
+        for K in [K for K in range(number_of_disks) if K < topdisk]:
+            if rods[destination_rod][K] == 1:
+                eligible = False
+                print "Sorry, no disk can be placed on top of a \
+smaller disk."
+                break
+            else:
+                continue
+        if eligible == True:
+            rods[origin_rod][topdisk] = 0
+            rods[destination_rod][topdisk] = 1 
+            
+print "Congratulations, you've won!"
+
+///
+
+
+Game play:
+
+/// Terminal ///
+
+PS C:\mystuff\python\mockacademy\Week_1\day_01> python hanoi.py
+Enter number of rods.
+3
+Enter number of disks.
+4
+Enter starting rod.
+1
+Rod 1 : [1, 2, 3, 4]
+Rod 2 : []
+Rod 3 : []
+Choose a rod to move disk from.
+1
+Choose a rod to move disk to.
+2
+Rod 1 : [2, 3, 4]
+Rod 2 : [1]
+Rod 3 : []
+Choose a rod to move disk from.
+
+///
+
+
+Spelling out numbers
+--------------------
+
+Finally, the most challenging exercise of Day 1 ([according to Zack]()): 
+a program that writes out the name of a number in English.
+
+/// Python: written_numbers.py ///
+
+# Spelling out numbers:
+    # Divide digits by 3, find remainder
+    # Determine appropriate magnitude (which -illion leads)
+    # (will go to decillions)
+    # List descending magnitudes
+    # (...trillion, billion, million, thousand, ---), skipping "000"'s
+    
+
+
+def name(magnitude):
+    if magnitude == 0:
+        return "" 
+    if magnitude == 1:
+        return "thousand"
+    if magnitude == 2:
+        return "million"
+    if magnitude == 3:
+        return "billion"
+    if magnitude == 4:
+        return "trillion"
+    if magnitude == 5:
+        return "quadrillion"
+    if magnitude == 6:
+        return "quintillion"
+    if magnitude == 7:
+        return "sextillion"
+    if magnitude == 8:
+        return "septillion"
+    if magnitude == 9:
+        return "octillion"
+    if magnitude == 10:
+        return "nonillion"  
+    if magnitude == 11:
+        return "decillion"    
+
+def underthousand(n): 
+    # spelling out numbers under 1000,
+    # taken from my solution to Project Euler problem 17.
+    num = str(n)
+    if len(num) == 1:
+        if num == "0":
+            return "zero"
+        if num == "1":
+            return "one"
+        if num == "2":
+            return "two"
+        if num == "3":
+            return "three"
+        if num == "4":
+            return "four"
+        if num == "5":
+            return "five"
+        if num == "6":
+            return "six"
+        if num == "7":
+            return "seven"
+        if num == "8":
+            return "eight"
+        if num == "9":
+            return "nine"
+    if len(num) == 2:
+        tens = num[0]
+        ones = num[1]
+        if tens == "1":
+            if ones == "0":
+                return "ten"
+            if ones == "1":
+                return "eleven"
+            if ones == "2":
+                return "twelve"
+            if ones == "3":
+                return "thirteen"
+            if ones == "4":
+                return "fourteen"
+            if ones == "5":
+                return "fifteen"
+            if ones == "8":
+                return "eighteen"
+            else:
+                return underthousand(int(ones)) + "teen"
+        if tens == "2":
+            if ones == "0":
+                return "twenty"
+            else:
+                return "twenty "+underthousand(int(ones))
+        if tens == "3":
+            if ones == "0":
+                return "thirty"
+            else:
+                return "thirty " + underthousand(int(ones))
+        if tens == "4":
+            if ones == "0": 
+                return "forty"
+            else:
+                return "forty " + underthousand(int(ones))
+        if tens == "5":
+            if ones == "0":
+                return "fifty "
+            else:
+                return "fifty " + underthousand(int(ones))
+        if tens == "8":
+            if ones == "0":
+                return "eighty "
+            else:
+                return "eighty " + underthousand(int(ones))
+        else:
+            if ones == "0":
+                return underthousand(int(tens))+ "ty"
+            else:
+                return (
+                underthousand(int(tens)*10) + 
+                " " + underthousand(int(ones))
+                )
+    if len(num) == 3:
+        if num[1] == "0" and num[2] == "0":
+            return underthousand(int(num[0])) + " hundred"
+        elif num[1] == "0":
+            return (
+            underthousand(int(num[0])) + " hundred" + " and " + 
+            underthousand(int(num[2]))
+            )
+        else:
+            return (
+            underthousand(int(num[0])) + " hundred" + " and " + 
+            underthousand(num[1:])
+            )
+        
+def spellout(n): 
+    num = str(n)    
+    num_digits = len(num)
+    magnitude = num_digits/3
+    revnum = num[::-1]
+    # gather three-digit segments into a list:
+    segments = []    
+    for k in range(magnitude):
+        segments.append(revnum[3*k:3*k+3])
+    if num_digits % 3 != 0:
+        segments.append(revnum[3*magnitude:])
+    def space_ifnec(i):
+        if i == 0:
+            return ""
+        else:
+            return " "      
+    names = [
+    underthousand(int(segments[i][::-1])) + space_ifnec(i) + name(i)
+    for i in range(len(segments)) if segments[i]!= "000"
+    ]
+    revnames = names[::-1]
+    number = revnames[0]
+    for x in revnames[1:]:
+        number = number + ", " + x 
+    return number
+    
+# print "259123: " + spellout(259123)   
+
+# print "12345678909876543210: " + spellout(12345678909876543210) 
+
+# print "100000000000001: " + spellout(100000000000001)
+
+# print "1000:" + spellout(1000)
+    
+
+
+if __name__ == "__main__":
+    number = int(
+    raw_input("Enter a number that you'd like to spell out: \n")
+    )    
+    print spellout(number)
+
+///
+
+
+/// Terminal ///
+
+PS C:\mystuff\python\mockacademy\Week_1\day_01> python written_numbers.py
+Enter a number that you'd like to spell out:
+237546298564239578364598
+two hundred and thirty seven sextillion, five hundred and forty six quintillion, two hundred and ninety eight quadrillio
+n, five hundred and sixty four trillion, two hundred and thirty nine billion, five hundred and seventy eight million, th
+ree hundred and sixty four thousand, five hundred and ninety eight
+
+///
 
 

@@ -1,11 +1,11 @@
-#Spelling out numbers:
-    #Divide digits by 3, find remainder
-    #Determine appropriate magnitude (which -illion leads)
-    #(will go to decillions)
-    #List descending magnitudes
-    #(...trillion, billion, million, thousand, ---), skipping "000"'s
+# Spelling out numbers:
+    # Divide digits by 3, find remainder
+    # Determine appropriate magnitude (which -illion leads)
+    # (will go to decillions)
+    # List descending magnitudes
+    # (...trillion, billion, million, thousand, ---), skipping "000"'s
     
-#CURRENT STATUS: improved, but will await unit testing before pronouncing further.
+
 
 def name(magnitude):
     if magnitude == 0:
@@ -130,7 +130,7 @@ def spellout(n):
     num_digits = len(num)
     magnitude = num_digits/3
     revnum = num[::-1]
-    #gather three-digit segments into a list:
+    # gather three-digit segments into a list:
     segments = []    
     for k in range(magnitude):
         segments.append(revnum[3*k:3*k+3])
@@ -159,8 +159,13 @@ def spellout(n):
 
 # print "1000:" + spellout(1000)
     
-    
-    
+
+
+if __name__ == "__main__":
+    number = int(
+    raw_input("Enter a number that you'd like to spell out: \n")
+    )    
+    print spellout(number)
     
     
     
