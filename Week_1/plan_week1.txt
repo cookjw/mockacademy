@@ -2,7 +2,7 @@ Personal App Academy emulation, with Python/Django in place of Ruby/Rails (apolo
 
 Day 1:
 - monkeypatch list type: not possible (create user-defined subclass instead) (http://stackoverflow.com/questions/192649/can-you-monkey-patch-methods-on-core-types-in-python)
-- playable Tower of Hanoi game
+- playable Towers of Hanoi game
 - write a function that accepts integers and returns a string describing the number in words (so e.g. 259123 becomes "two hundred fifty nine thousand one hundred twenty three")
 
 

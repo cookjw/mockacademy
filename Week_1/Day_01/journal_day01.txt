@@ -1,0 +1,790 @@
+So it begins!
+
+Our tasks for the first "day" of Mockacademy, adopted from [Zack] and [Julie](http://julieatappacademy.tumblr.com/post/67439091665/week-1-day-1)'s blogs,
+are:
+
+- the Python analogue of monkeypatching Ruby's Array type, adding specifically:
+-- the "uniq" method, which eliminates duplicate elements of an array;
+- a function that converts a number to another base;
+- an implementation of the Set data type;
+- a playable Towers of Hanoi game
+- a function that accepts an integer and returns its name in words
+(so e.g. 259123 becomes "two hundred fifty nine thousand one hundred twenty three")
+
+
+Monkeypatching the list type?
+------------------------------
+
+A recurring theme of this course will be the differences between Python
+and Ruby. Our very first topic provides an example. 
+
+In Ruby, you're allowed to take built-in data types
+and add your own new methods to them. This is called "monkeypatching". 
+For example, suppose you'd like a method to sum the squares of the 
+elements of a Ruby array (at least when the elements are numbers).
+You can just open up the Array class and add it:
+
+/// Ruby ///
+
+class Array
+
+  def sum_squares
+    sum = 0
+    for number in self
+      sum += number*number      
+    end
+    return sum    
+  end
+
+///
+
+You can then do:
+
+/// Interactive Interpreter (Ruby) ///
+
+irb(main):016:0> [1,2,3].sum_squares
+=> 14
+
+///
+
+
+You can't do this in Python, unfortunately. If you try to "open up" 
+a built-in class, you'll just end up creating a new class with the
+same name:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.2 (default, Jun 12 2011, 15:08:59) [MSC v.1500 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> isinstance([1,2,3], list)
+True
+>>> class list:
+...     pass
+...
+>>> isinstance([1,2,3], list)
+False
+
+///
+
+The closest thing we can do, as we're told on [Stack Overflow](http://stackoverflow.com/a/193660), 
+is to inherit from the class in question:
+
+/// Python ///
+
+class Array(list):
+     def __new__(cls, values): 
+         return list.__new__(cls, values)
+     
+     def sum_squares(self):
+         sum = 0
+         for number in self:
+             sum += number*number
+         return sum
+        
+
+///
+
+(See https://www.python.org/download/releases/2.2/descrintro/#__new__ 
+for explanation of the __new__ method. The point here is that it allows
+us to make an instance of our new Array class by passing in a Python
+list, as in x = Array([1,2,3]).)
+
+This lets you do:
+
+/// Interactive Interpreter (Python) ///
+
+>>> x = Array([1,2,3])
+>>> x
+[1, 2, 3]
+>>> x.sum_squares()
+14
+
+///
+
+Of course, in real life, one would probably just prefer to define an
+ordinary 'outside' function sum_squares(my_list), as opposed to a method
+of the relevant class. Cf. Python's built-in sum(my_list), max(my_list), 
+etc. In Ruby, habits are different.
+
+Uniqness
+----------
+
+With that in mind, let's implement the functionality of Ruby's uniq
+method on arrays, which eliminates duplicate elements. 
+
+/// Python: uniq.py ///
+
+def uniq(my_list):
+    for item in my_list:
+        while my_list.count(item) > 1:
+            first_index = my_list.index(item)
+            second_index = my_list.index(item, first_index+1)
+            del my_list[second_index]
+    return my_list
+    
+
+///
+
+Testing:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.2 (default, Jun 12 2011, 15:08:59) [MSC v.1500 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from uniq import uniq
+>>> uniq([1,2,3,4,5,5,5,6,7,2])
+[1, 2, 3, 4, 5, 6, 7]
+>>> uniq([])
+[]
+>>> uniq([1,2,3])
+[1, 2, 3]
+>>> uniq([1,2,1,4])
+[1, 2, 4]
+>>>
+
+///
+
+All Your Base
+-------------
+
+Next, we'll implement [base]() conversion of numbers. According to 
+[Julie](), the name of her method for doing this in Ruby was
+num_to_s. Anyone familiar with Ruby will recognize "to_s" as the method
+that converts to a string, e.g.
+
+/// Interactive Interpreter (Ruby) ///
+
+irb(main):001:0> 123.to_s
+=> "123"
+
+/// 
+
+What the same "num_to_s" suggests, therefore, is that the output of our
+base-conversion function should be in string form. (I don't actually know
+whether this was the intention behind the name; "s" could just be a 
+variable representing the target base for all I know. But string 
+representation of the output seems appropriate in any case.)
+
+
+
+/// Python: base.py ///
+
+from string import ascii_uppercase
+
+def digit(number):
+    """
+    Converts number to 'digit', i.e. appropriate single-character 
+    string ('0' through '9', or 'A' through 'Z' for bases > 10)
+    """
+    if 0 <= number <= 9:
+        return str(number)
+    elif 10 <= number < 36:
+        return ascii_uppercase[number - 10]
+    else:
+        raise Exception("Wrong kind of input for digit function")
+        
+def highest_power(number, base):
+    """
+    Returns highest power of base that is <= number
+    (i.e., the floor function of the logarithm of number to base base)
+    """
+    exponent = 0
+    while base**(exponent) <= number:
+        exponent += 1
+    return exponent - 1
+    
+
+def convert_base(number, base):
+    """
+    Converts number (integer) to string representation in new base
+    """
+    result = ""
+    n = highest_power(number, base)
+    x = number
+    while n >= 0:
+        quotient = x // base**n # Integer division, even in Python 3!
+        remainder = x % base**n
+        place_value = digit(quotient)
+        result += place_value
+        x = remainder
+        n -= 1
+    return result
+
+///
+
+
+In action:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.2 (default, Jun 12 2011, 15:08:59) [MSC v.1500 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from base import convert_base
+>>> convert_base(2, 2)
+'10'
+>>> convert_base(144, 12)
+'100'
+>>> convert_base(144, 23)
+'66'
+>>> convert_base(144, 29)
+'4S'
+>>> convert_base(11, 12)
+'B'
+
+///
+
+
+[Babbitt](http://en.wikipedia.org/wiki/All_Set_(Babbitt)) would be proud
+-----------------------
+
+Python comes equipped with a set data type, but we will re-implement it
+(or, a basic version thereof, anyway) ourselves, learning some CS
+tricks along the way.
+
+What is a set? Answer: an unordered collection of items. What can we do
+with such a thing? We might want to add items and remove them, to begin
+with. We'll take our specifications from a recent practice interview I
+participated in: we should be able to add and remove items, as well as 
+randomly sample them.
+
+It turns out that this can be done in constant time via the 
+technique of "hashing". For our purposes here, this translates to 
+"using dictionaries". The code looks like this:
+
+/// Python: Set.py ///
+
+from random import choice
+
+class Set:
+    def __init__(self, *items):
+        self.items = {}
+        self.array = []
+        for item in items:
+            self.add(item)
+        
+    def __repr__(self):
+        return "Set: " + str(self.array)
+        
+    def add(self, item):
+        self.array.append(item)
+        self.items[item] = len(self.array) - 1
+        
+    def remove(self, item):
+        index = self.items[item]
+        last_item = self.array[-1]
+        current_item = self.array[index]
+        assert current_item == item
+        self.array[index] = last_item
+        self.items[last_item] = index
+        self.array[-1] = current_item
+        self.items[current_item] = len(self.array) - 1
+        del self.array[-1]
+        del self.items[item]
+        
+    def sample(self):
+        return choice(self.array)
+
+///
+
+Testing:
+
+/// Interactive Interpreter (Python) ///
+
+Python 2.7.6 (default, Mar 22 2014, 22:59:56) 
+[GCC 4.8.2] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from Set import Set
+>>> my_set = Set(1,2,3,4,5,6)
+>>> my_set
+Set: [1, 2, 3, 4, 5, 6]
+>>> my_set.sample()
+6
+>>> my_set.remove(6)
+>>> my_set
+Set: [1, 2, 3, 4, 5]
+>>> my_set.sample()
+2
+>>> my_set.remove(2)
+>>> my_set
+Set: [1, 5, 3, 4]
+>>> my_set.sample()
+3
+>>> my_set.remove(3)
+>>> my_set
+Set: [1, 5, 4]
+
+///
+
+Towers of Hanoi
+-----------------
+
+Next, we make a playable [Towers of Hanoi](http://en.wikipedia.org/wiki/Tower_of_Hanoi) game.
+
+When I originally did these exercises last year, I didn't have much 
+familiarity with Python's built-in operations on lists (this was to
+some extent intentional), so I wrote my own "listoperations" module:
+
+/// listoperations.py ///
+
+def checkorder(somelist):
+        somelength = len(somelist)
+        rightorder = True
+        for index in range(somelength - 1):
+            if somelist[index] <= somelist[index + 1]:
+                continue
+            else:
+                rightorder = False
+                break 
+        return rightorder 
+
+
+def sortlist(list):
+    length = len(list)       
+    while checkorder(list) == False:     
+        for index in range(length - 1):
+            if list[index] <= list[index + 1]:
+                continue
+            else:
+                a = list[index]
+                b = list[index + 1]
+                list[index] = b
+                list[index + 1] = a
+                        
+    return list
+
+
+def listmax(list):
+    newlist = sortlist(list)
+    maxindex = len(newlist) - 1
+    return newlist[maxindex]
+    
+def listsum(list):
+    length = len(list)
+    total = 0
+    for i in range(length):
+        total = total+list[i]
+    return total
+    
+def listprod(list):
+    length = len(list)
+    product = list[0]
+    for i in range(1,length):
+        product = product*list[i]
+    return product
+
+def listcount(list, item):
+    L = []
+    for x in list:
+        if x == item:
+            L.append(x)
+    return len(L)       
+
+def eliminate_duplicates(list):
+	for item in list:
+		while listcount(list, item) > 1:
+		    list.remove(item)
+	return list
+    
+    
+def getindices(item, list):
+    listlength = len(list)
+    L = []
+    for index in range(listlength):
+        if list[index] == item:
+            L.append(index)
+    return L
+    
+def removeitem(item, list): #returns result of removing item from list
+    L = []
+    for x in list:
+        if x != item:
+            L.append(x)
+    return L
+    
+def removeitemindex(index, list):
+    L = []
+    for i in range(len(list)):
+        if i != index:
+            L.append(list[i])
+    return L
+        
+    
+    
+    
+def removefrom(list1, list2): #returns result of removing list2 from list1    
+    L = list1
+    for x in list2:        
+        if x in L:
+           L = removeitem(x,L)    
+    return L
+    
+
+///
+
+I used the functions from this module to (among other things) write
+a Towers of Hanoi game: 
+
+/// Python: hanoi.py ///
+
+#Towers of Hanoi game
+
+#Wikipedia:
+# "The objective of the puzzle is to move the entire stack to another
+# rod, obeying the following simple rules:
+# "1. Only one disk can be moved at a time.
+# "2. Each move consists of taking the upper disk from one of the stacks
+# and placing it on top of another stack i.e. a disk can only be moved if
+# it is the uppermost disk on a stack.
+# "3. No disk may be placed on top of a smaller disk."
+
+#Rods labeled R_1,...,R_m.
+#Disks labeled D_1,...D_n.
+#Each rod has slots S_1,...,S_n for disks.
+
+#Winning condition: all slots occupied on non-starting rod.
+
+#Operation User Can Perform: move disk D_k from slot (R_i, S_k) to slot
+# (R_j, S_k)
+#Restriction: (R_i,S_K) and (R_j,S_K) must be unoccupied for K < k. 
+
+#Rule 1 is satisfied by definition of Operation User Can Perform.
+#Rule 2 is satisfied by Restriction.
+#Rule 3 is satisfied by having designated slots on each rod for each
+# disk.
+
+#Game setup:
+#Prompt: "Enter number of rods." 
+#Prompt: "Enter number of disks."
+#Prompt: "Enter starting rod."
+
+#Game status:
+#List of occupied slots.
+#Display: "Rod i: [list slot numbers]"
+
+#Game play:
+#Prompt: "Choose a rod to move disk from."
+#Prompt: "Choose a rod to move disk to."
+
+import listoperations
+
+number_of_rods = int(raw_input("Enter number of rods.\n"))
+number_of_disks = int(raw_input("Enter number of disks. \n"))
+starting_rod = int(raw_input("Enter starting rod.\n")) - 1
+
+#Inital setup:
+rods = []
+for i in range(number_of_rods):
+    rods.append([])
+    for k in range(number_of_disks):
+        if i == starting_rod:
+            rods[i].append(1)
+        else:
+            rods[i].append(0)
+            
+#result of removing starting rod from rod list            
+other_rods = listoperations.removeitemindex(starting_rod, rods) 
+
+
+
+            
+def off_of_starting_rod():
+   #Tests whether disks have been removed from starting rod.
+    status = True
+    for k in range(number_of_disks):
+        if rods[starting_rod][k] == 1:
+            status = False
+            break            
+        else:
+            continue
+    return status
+    
+    
+def winning_condition():    
+    if off_of_starting_rod() == True:             
+        for i in range(len(other_rods)):       
+            status = True
+            current_candidate = other_rods[i]
+            other_other_rods = listoperations.removeitemindex(
+                i, other_rods
+            )            
+            for k in range(number_of_disks):
+                
+                if current_candidate[k] == 0:
+                    
+                    status = False                        
+            if status == True:
+                
+                for j in range(len(other_other_rods)):
+                    
+                    for k in range(number_of_disks):
+                        
+                        if other_other_rods[j][k] == 1:
+                            #
+                            status = False
+                            break
+                            break 
+                break
+        
+        return status
+                       
+     
+          
+    else:             
+        return False  
+               
+        
+            
+while winning_condition() == False:       
+    for i in range(len(rods)):
+        j = i+1
+        print "Rod %s :" %j + " " + str(
+            [k+1 for k in range(number_of_disks) if rods[i][k] == 1]
+            )
+    origin_rod = int(raw_input("Choose a rod to move disk from. \n")) - 1   
+    topdisk = None
+    for K in range(number_of_disks):
+        if rods[origin_rod][K] == 1:
+            topdisk = K
+            break
+    if topdisk == None:
+        print "Sorry, no disks on that rod."        
+    else:        
+        destination_rod = int(
+            raw_input("Choose a rod to move disk to. \n")
+            ) - 1
+        eligible = True
+        for K in [K for K in range(number_of_disks) if K < topdisk]:
+            if rods[destination_rod][K] == 1:
+                eligible = False
+                print "Sorry, no disk can be placed on top of a \
+smaller disk."
+                break
+            else:
+                continue
+        if eligible == True:
+            rods[origin_rod][topdisk] = 0
+            rods[destination_rod][topdisk] = 1 
+            
+print "Congratulations, you've won!"
+
+///
+
+
+Game play:
+
+/// Terminal ///
+
+PS C:\mystuff\python\mockacademy\Week_1\day_01> python hanoi.py
+Enter number of rods.
+3
+Enter number of disks.
+4
+Enter starting rod.
+1
+Rod 1 : [1, 2, 3, 4]
+Rod 2 : []
+Rod 3 : []
+Choose a rod to move disk from.
+1
+Choose a rod to move disk to.
+2
+Rod 1 : [2, 3, 4]
+Rod 2 : [1]
+Rod 3 : []
+Choose a rod to move disk from.
+
+///
+
+
+Spelling out numbers
+--------------------
+
+Finally, the most challenging exercise of Day 1 ([according to Zack]()): 
+a program that writes out the name of a number in English.
+
+/// Python: written_numbers.py ///
+
+# Spelling out numbers:
+    # Divide digits by 3, find remainder
+    # Determine appropriate magnitude (which -illion leads)
+    # (will go to decillions)
+    # List descending magnitudes
+    # (...trillion, billion, million, thousand, ---), skipping "000"'s
+    
+
+
+def name(magnitude):
+    if magnitude == 0:
+        return "" 
+    if magnitude == 1:
+        return "thousand"
+    if magnitude == 2:
+        return "million"
+    if magnitude == 3:
+        return "billion"
+    if magnitude == 4:
+        return "trillion"
+    if magnitude == 5:
+        return "quadrillion"
+    if magnitude == 6:
+        return "quintillion"
+    if magnitude == 7:
+        return "sextillion"
+    if magnitude == 8:
+        return "septillion"
+    if magnitude == 9:
+        return "octillion"
+    if magnitude == 10:
+        return "nonillion"  
+    if magnitude == 11:
+        return "decillion"    
+
+def underthousand(n): 
+    # spelling out numbers under 1000,
+    # taken from my solution to Project Euler problem 17.
+    num = str(n)
+    if len(num) == 1:
+        if num == "0":
+            return "zero"
+        if num == "1":
+            return "one"
+        if num == "2":
+            return "two"
+        if num == "3":
+            return "three"
+        if num == "4":
+            return "four"
+        if num == "5":
+            return "five"
+        if num == "6":
+            return "six"
+        if num == "7":
+            return "seven"
+        if num == "8":
+            return "eight"
+        if num == "9":
+            return "nine"
+    if len(num) == 2:
+        tens = num[0]
+        ones = num[1]
+        if tens == "1":
+            if ones == "0":
+                return "ten"
+            if ones == "1":
+                return "eleven"
+            if ones == "2":
+                return "twelve"
+            if ones == "3":
+                return "thirteen"
+            if ones == "4":
+                return "fourteen"
+            if ones == "5":
+                return "fifteen"
+            if ones == "8":
+                return "eighteen"
+            else:
+                return underthousand(int(ones)) + "teen"
+        if tens == "2":
+            if ones == "0":
+                return "twenty"
+            else:
+                return "twenty "+underthousand(int(ones))
+        if tens == "3":
+            if ones == "0":
+                return "thirty"
+            else:
+                return "thirty " + underthousand(int(ones))
+        if tens == "4":
+            if ones == "0": 
+                return "forty"
+            else:
+                return "forty " + underthousand(int(ones))
+        if tens == "5":
+            if ones == "0":
+                return "fifty "
+            else:
+                return "fifty " + underthousand(int(ones))
+        if tens == "8":
+            if ones == "0":
+                return "eighty "
+            else:
+                return "eighty " + underthousand(int(ones))
+        else:
+            if ones == "0":
+                return underthousand(int(tens))+ "ty"
+            else:
+                return (
+                underthousand(int(tens)*10) + 
+                " " + underthousand(int(ones))
+                )
+    if len(num) == 3:
+        if num[1] == "0" and num[2] == "0":
+            return underthousand(int(num[0])) + " hundred"
+        elif num[1] == "0":
+            return (
+            underthousand(int(num[0])) + " hundred" + " and " + 
+            underthousand(int(num[2]))
+            )
+        else:
+            return (
+            underthousand(int(num[0])) + " hundred" + " and " + 
+            underthousand(num[1:])
+            )
+        
+def spellout(n): 
+    num = str(n)    
+    num_digits = len(num)
+    magnitude = num_digits/3
+    revnum = num[::-1]
+    # gather three-digit segments into a list:
+    segments = []    
+    for k in range(magnitude):
+        segments.append(revnum[3*k:3*k+3])
+    if num_digits % 3 != 0:
+        segments.append(revnum[3*magnitude:])
+    def space_ifnec(i):
+        if i == 0:
+            return ""
+        else:
+            return " "      
+    names = [
+    underthousand(int(segments[i][::-1])) + space_ifnec(i) + name(i)
+    for i in range(len(segments)) if segments[i]!= "000"
+    ]
+    revnames = names[::-1]
+    number = revnames[0]
+    for x in revnames[1:]:
+        number = number + ", " + x 
+    return number
+    
+# print "259123: " + spellout(259123)   
+
+# print "12345678909876543210: " + spellout(12345678909876543210) 
+
+# print "100000000000001: " + spellout(100000000000001)
+
+# print "1000:" + spellout(1000)
+    
+
+
+if __name__ == "__main__":
+    number = int(
+    raw_input("Enter a number that you'd like to spell out: \n")
+    )    
+    print spellout(number)
+
+///
+
+
+/// Terminal ///
+
+PS C:\mystuff\python\mockacademy\Week_1\day_01> python written_numbers.py
+Enter a number that you'd like to spell out:
+237546298564239578364598
+two hundred and thirty seven sextillion, five hundred and forty six quintillion, two hundred and ninety eight quadrillio
+n, five hundred and sixty four trillion, two hundred and thirty nine billion, five hundred and seventy eight million, th
+ree hundred and sixty four thousand, five hundred and ninety eight
+
+///
+
+
