@@ -233,6 +233,10 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ///
 
+[Babbitt](http://en.wikipedia.org/wiki/All_Set_%28Babbitt%29) would be proud
+---------------------------------------------------------------------------
 
+Python comes equipped with a set data type, but in this section we'll
+reimplement it ourselves, learning some CS tricks along the way.
 
 
