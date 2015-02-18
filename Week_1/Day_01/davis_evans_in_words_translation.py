@@ -12,6 +12,7 @@ def in_words(number):
         hundreds_digit, tens_and_ones = divmod(triple, 100)
         if hundreds_digit != 0:
             words.append(digit_translate[hundreds_digit] + " hundred")
+        # print "words: " + str(words)
         teens = {10: "ten", 11: "eleven", 12:"twelve", 13: "thirteen",
                  14: "fourteen", 15: "fifteen", 16:"sixteen",
                  17: "seventeen", 18: "eighteen", 19:"nineteen"}
@@ -27,7 +28,8 @@ def in_words(number):
                 words.append(tens_place[tens*10])
                 if ones != 0:
                     words.append(digit_translate[ones]) 
-        (' ').join(words)
+        # print "words: " + str(words)
+        return (' ').join(words)
         
     if number == 0:
         return "zero"
@@ -37,15 +39,15 @@ def in_words(number):
     while quotient != 0:
         quotient, remainder = divmod(quotient, 1000)
         triples.append(remainder)
-    print "triples:" + str(triples)
+    # print "triples:" + str(triples)
     triples_words = map(convert_triple, triples)
-    print "triples_words: " + str(triples_words)
+    # print "triples_words: " + str(triples_words)
     endings = ['', " thousand", " million", " billion", " trillion", " quadrillion"]
     result = []
     for index, t in enumerate(triples_words):
         if t:
             result.append(t + endings[index])
-    print "result: " + str(result)
+    # print "result: " + str(result)
     return " ".join(result[::-1])
         
                 
