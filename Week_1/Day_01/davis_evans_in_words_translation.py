@@ -29,20 +29,23 @@ def in_words(number):
                     words.append(digit_translate[ones]) 
         (' ').join(words)
         
-        if number == 0:
-            return "zero"
+    if number == 0:
+        return "zero"
             
-        triples = []
-        quotient = number
-        while quotient != 0:
-            quotient, remainder = divmod(quotient, 1000)
-            triples.append(remainder)
-        triples_words = map(convert_triple, triples)
-        endings = ['', " thousand", " million", " billion", " trillion", " quadrillion"]
-        result = []
-        for index, t in enumerate(triples_words):
-            if t:
-                result.append(t + endings[index])
-        return " ".join(result[::-1])
+    triples = []
+    quotient = number
+    while quotient != 0:
+        quotient, remainder = divmod(quotient, 1000)
+        triples.append(remainder)
+    print "triples:" + str(triples)
+    triples_words = map(convert_triple, triples)
+    print "triples_words: " + str(triples_words)
+    endings = ['', " thousand", " million", " billion", " trillion", " quadrillion"]
+    result = []
+    for index, t in enumerate(triples_words):
+        if t:
+            result.append(t + endings[index])
+    print "result: " + str(result)
+    return " ".join(result[::-1])
         
                 
