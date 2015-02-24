@@ -1,6 +1,6 @@
 So it begins!
 
-Our tasks for the first "day" of Mockacademy, adopted from [Zack] and [Julie](http://julieatappacademy.tumblr.com/post/67439091665/week-1-day-1)'s blogs,
+Our tasks for the first "day" of Mockacademy, adopted from [Zack](http://zackmdavis.net/blog/2013/09/app-academy-diary-week-one/) and [Julie](http://julieatappacademy.tumblr.com/post/67439091665/week-1-day-1)'s blogs,
 are:
 
 - the Python analogue of monkeypatching Ruby's Array type, adding specifically:
@@ -595,6 +595,121 @@ Choose a rod to move disk from.
 
 ///
 
+Here's the App Academy version in Ruby by Zack Davis and Chris Evans:
+
+/// Ruby: array_exercises2.rb ///
+
+class HanoiGame
+
+  def self.play(num_discs)
+
+    discs = [(1..num_discs).to_a.reverse,[],[]]
+
+    until discs[2] == (1..num_discs).to_a.reverse
+      print discs, "\n"
+      puts "Write the index of the pile you want to move from (pile 1, 2, or 3) and to in the form 'from,to'"
+      to_and_from = gets.chomp
+      index_from,index_to = to_and_from.split(",").map{|char| char.to_i-1}
+      if discs[index_from].empty?
+        puts "Cannot move from an empty pile!"
+        next
+      end
+      if not discs[index_to].empty?
+discs = [(1..num_discs).to_a.reverse,[],[]]
+
+    until discs[2] == (1..num_discs).to_a.reverse
+      print discs, "\n"
+      puts "Write the index of the pile you want to move from (pile 1, 2, or 3) and to in the form 'from,to'"
+      to_and_from = gets.chomp
+      index_from,index_to = to_and_from.split(",").map{|char| char.to_i-1}
+      if discs[index_from].empty?
+        puts "Cannot move from an empty pile!"
+        next
+      end
+      if not discs[index_to].empty?
+        if (discs[index_from][-1] > discs[index_to][-1])
+          puts "You can't put a larger disc on a smaller one, dummy"
+          next
+        end
+      end
+      discs[index_to].push(discs[index_from].pop)
+    end
+    puts "You win!"
+  end
+
+end
+
+HanoiGame.play(3)
+
+///
+
+A difference between Python and Ruby that I learned while
+translating this code:
+
+/// Interactive Interpreter (Ruby) ///
+
+2.1.5 :002 > [][-1]
+ => nil 
+
+///
+
+
+/// Interactive Interpreter (Python) ///
+
+>>> [][-1]
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+IndexError: list index out of range
+>>> 
+
+
+///
+
+That is, whereas in Python an attempt to access a list index that 
+doesn't exist results in an error, in Ruby it merely results in a 
+return value of nil.
+
+(This didn't actually turn out to matter in the translation, but I 
+discovered it while debugging another problem.)
+
+Here is my translation into Python:
+
+/// Python: davis_evans_hanoi_translation.py ///
+
+class HanoiGame:
+    
+    @classmethod
+    def play(cls, num_discs):
+        
+        discs = [list(range(1, num_discs+1))[::-1],[],[]]
+        
+        while discs[2] != list(range(1, num_discs+1))[::-1]:
+            print discs
+            to_and_from = raw_input(
+                "Write the index of the pile you want to move from "
+                + "(pile 1, 2, or 3) and to in the form 'from,to' \n"
+                )
+            index_from, index_to = [int(char)-1 for char in to_and_from.split(",")]
+            print "index_from: " + str(index_from)
+            print "index_fo: " + str(index_to)
+            if not discs[index_from]:
+                print "Cannot move from an empty pile!"
+                continue 
+            if discs[index_to]:
+                print "discs[index_from]: " + str(discs[index_from])
+                if (discs[index_from][-1] > discs[index_to][-1]):
+                    print "You can't put a larger disc on a smaller one, dummy"
+                    continue
+            discs[index_to].append(discs[index_from].pop())
+        print "You win!"
+                
+HanoiGame.play(3)            
+
+///
+
+Also of note: the @classmethod decorator, which creates a class method;
+in Ruby, this was accomplished by the self keyword (self.my_method is a
+class method). 
 
 Spelling out numbers
 --------------------
@@ -787,4 +902,123 @@ ree hundred and sixty four thousand, five hundred and ninety eight
 
 ///
 
+Now, here's the Davis-Evans Ruby version:
 
+/// Ruby: in_words.rb (Davis-Evans) ///
+
+class Fixnum
+
+  def in_words
+
+    def convert_triple(triple)
+      i_digits = (1..9).to_a
+      s_digits = ["one", "two", "three", "four",
+        "five", "six", "seven", "eight", "nine"]
+      digit_pairs = i_digits.zip(s_digits)
+      digit_translate = {}
+      digit_pairs.each do |num, word|
+        digit_translate[num] = word
+      end
+      words = []
+       hundreds_digit, tens_and_ones = triple.divmod(100)
+       unless hundreds_digit == 0
+         words << digit_translate[hundreds_digit] + " hundred"
+       end
+       teens = {10 => "ten", 11 => "eleven", 12 => "twelve", 13 => "thirteen",
+         14 => "fourteen", 15 => "fifteen", 16 => "sixteen", 17 => "seventeen",
+         18 => "eighteen", 19 => "nineteen"}
+         tens_place = {20 => "twenty", 30 => "thirty", 40 => "forty",
+           50 => "fifty", 60 => "sixty", 70 => "seventy", 80 => "eighty",
+           90 => "ninety"}
+      unless tens_and_ones == 0
+        if tens_and_ones < 10
+         words << digit_translate[tens_and_ones]
+        elsif tens_and_ones < 20
+           words << teens[tens_and_ones]
+        else
+           tens, ones = tens_and_ones.divmod(10)
+           words << tens_place[tens*10]
+           words << digit_translate[ones] unless ones == 0
+        end
+      end
+      words.join(' ')
+    end
+
+    return "zero" if self == 0
+
+    triples = []
+    quotient = self
+    until quotient == 0 do
+      quotient, remainder = quotient.divmod(1000)
+      triples << remainder
+    end
+    triples_words = triples.map{|t| convert_triple(t)}
+    endings = ['', " thousand", " million", " billion", " trillion", " quadrillion"]
+    result = []
+    triples_words.each_with_index do |t,index|
+      unless t.empty?
+        result << t + endings[index]
+      end
+    end
+    return result.reverse.join(" ")
+  end
+end
+
+
+///
+
+and my translation into Python:
+
+/// Python: davis_evans_in_words_translation.py ///
+
+def in_words(number):
+    
+    def convert_triple(triple):
+        i_digits = list(range(1,10))
+        s_digits = ["one", "two", "three", "four",
+        "five", "six", "seven", "eight", "nine"]
+        digit_pairs = zip(i_digits, s_digits)
+        digit_translate = {}
+        for num, word in digit_pairs:
+            digit_translate[num] = word
+        words = []
+        hundreds_digit, tens_and_ones = divmod(triple, 100)
+        if hundreds_digit != 0:
+            words.append(digit_translate[hundreds_digit] + " hundred")        
+        teens = {10: "ten", 11: "eleven", 12:"twelve", 13: "thirteen",
+                 14: "fourteen", 15: "fifteen", 16:"sixteen",
+                 17: "seventeen", 18: "eighteen", 19:"nineteen"}
+        tens_place = {20:"twenty", 30:"thirty", 40:"forty", 50:"fifty",
+        60:"sixty", 70:"seventy", 80:"eighty", 90:"ninety"}
+        if tens_and_ones != 0:
+            if tens_and_ones < 10:
+                words.append(digit_translate[tens_and_ones])
+            elif tens_and_ones < 20:
+                words.append(teens[tens_and_ones])
+            else:
+                tens, ones = divmod(tens_and_ones, 10)
+                words.append(tens_place[tens*10])
+                if ones != 0:
+                    words.append(digit_translate[ones])         
+        return (' ').join(words)
+        
+    if number == 0:
+        return "zero"
+            
+    triples = []
+    quotient = number
+    while quotient != 0:
+        quotient, remainder = divmod(quotient, 1000)
+        triples.append(remainder)    
+    triples_words = map(convert_triple, triples)    
+    endings = ['', " thousand", " million", " billion", " trillion", " quadrillion"]
+    result = []
+    for index, t in enumerate(triples_words):
+        if t:
+            result.append(t + endings[index])    
+    return " ".join(result[::-1])
+        
+                
+
+
+///
