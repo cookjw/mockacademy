@@ -189,4 +189,26 @@ print "Game Over!"
 ///
 
 
+Davis-Foster version in Ruby:
+
+/// ///
+
+
+
+///
+
+
+My translation (leaving out the computer-player parts, since these were
+unfinished):
+
+///
+
+
+
+///
+
+
+Eight Queens Problem
+--------------------
+
      
