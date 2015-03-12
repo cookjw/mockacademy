@@ -320,10 +320,70 @@ the maximum profit can earned by buying on day 0, selling on day 3.
 Again buy on day 4 and sell on day 6. If the given array of prices is
 sorted in decreasing order, then profit cannot be earned at all."
 
+Actually, this is a little more complicated than the problem I remember
+being given (once upon a time), so let's do the simpler version first.
+
+The simpler version is: find which pair(s) of days yield the maximum 
+profit -- in a single buy-sell cycle (i.e. you're only allowed to buy
+and sell once).
 
 
+So: we want to input a list (array) of prices (ints) and output a list
+of pairs of days (indices of the original list), where the pairs of days
+are those which will yield the maximum profit, whatever that happens to
+be.
+
+The obvious, naïve, dumb way to do this is simply to calculate 
+all of the (chronologically appropriate, i.e. forward-in-time)
+differences between prices and return the highest one:
+
+/// Pseudocode ///
+procedure: find day-pairs for max profit
+
+-load array as "prices"
+-set "results" to [] 
+-set "max_candidate" to 0
+
+-arrive at general day (represented by "reference_day")
+-set "current_day" to reference_day + 1
+
+-arrive at general day (represented by "current_day")
+-set "profit" to prices[current_day] - prices[reference_day]
+-compare "profit" to "max_candidate"
+--if profit > max_candidate, set "max_candidate to "profit", and append (reference_day, current_day) to "results"
+--if profit = max_candidate, append (reference_day, current_day) to "results"
+--otherwise proceed
+-if possible, increase "current_day" by 1
+
+-end with final day (current_day = len(prices)-1)
+
+-if possible, increase "reference_day" by 1
+
+-end with penultimate day (reference_day = len(prices) - 2)
+
+-return "results" and "max_candidate"
+
+///
+
+/// Python ///
+
+def find_max_profit_days(prices):
+    results = []
+    max_candidate = 0    
+    for reference_day in range(len(prices)-1):
+        for current_day in range(reference_day+1, len(prices)):
+            profit = prices[current_day] - prices[reference_day]
+            if profit > max_candidate:
+                results = [(reference_day, current_day)]
+                max_candidate = profit
+            elif profit == max_candidate:
+                results.append((reference_day, current_day))
+    return (results, max_candidate)
+
+///
 
 
+OK, so that's the simpler problem. Let's try the more complicated problem. 
 
 
 
