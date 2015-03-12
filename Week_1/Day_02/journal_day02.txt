@@ -383,8 +383,85 @@ def find_max_profit_days(prices):
 ///
 
 
-OK, so that's the simpler problem. Let's try the more complicated problem. 
+OK, so that's the simpler problem. Let's try the more complicated problem:
+where we allow ourselves to buy and sell more than once, and seek to find
+the maximum profit we can achieve in this way. 
 
+Once again, we'll start without worrying (too much) about efficiency; 
+we can learn the efficient solutions from the pros after we're done. 
+
+Note the following:
+
+Mathematical fact:
+
+if $a$ $x_1$, $x_2$, and $b$ are numbers such that $x_1 \geq x_2$, then 
+$$
+x_1 - a + b - x_2 \geq b - a
+$$
+
+The proof is simple: the left side is equal to the right side plus the
+nonnegative quantity $x_1 - x_2$. 
+
+
+From this fact, it follows that selling immediately before a drop in
+price will never decrease potential profit; or, in other words, one can
+never gain by holding a stock through a decrease in price, as opposed to
+selling it at the higher price and then immediately buying it again at 
+the lower. Consequently, the problem reduces to finding the increasing
+sequences of prices.
+
+We can do this easily enough:
+
+/// Pseudocode ///
+
+procedure: list increasing sequences
+
+input: array of prices
+output: list of pairs, representing the start and end indices of
+each increasing sequence of prices in the array
+
+- load array as ``prices``
+- set ``results`` to []
+- begin with ``starting_index`` set to 0
+- begin with ``current_index`` set to 1
+- arrive at general value of ``starting_index``
+- set ``current_index`` to starting_index + 1
+- arrive at general value of ``current_index``
+- compare prices[current_index] to prices[starting_index]
+-- if prices[current_index] >= prices[starting_index], then
+--- increase ``current_index`` by 1 if possible
+--- otherwise append (starting_index, current_index) to ``results``,
+and return ``results``
+-- otherwise, set ``starting_index`` to current_index if possible; if not, 
+then return ``results``
+- end with ``current_index`` set to len(prices) - 1
+- end with ``starting_index`` set to len(prices) - 2
+
+///
+
+/// Python ///
+
+def list_increasing_sequences(prices):
+    results = []
+    starting_index = 0
+    current_index = 1
+    while current_index <= len(prices) - 1:
+        if prices[current_index] >= prices[starting_index]:
+            if current_index < len(prices) - 1:
+                current_index += 1
+            else:
+                results.append((starting_index, current_index))
+                return results
+        else:
+            if current_index < len(prices) - 1:
+                results.append((starting_index, current_index-1))
+                starting_index = current_index
+                current_index = starting_index + 1
+            else:
+                return results
+    return results
+
+///
 
 
 

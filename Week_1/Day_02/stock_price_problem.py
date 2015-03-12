@@ -10,3 +10,24 @@ def find_max_profit_days(prices):
             elif profit == max_candidate:
                 results.append((reference_day, current_day))
     return (results, max_candidate)
+
+
+def list_increasing_sequences(prices):
+    results = []
+    starting_index = 0
+    current_index = 1
+    while current_index <= len(prices) - 1:
+        if prices[current_index] >= prices[starting_index]:
+            if current_index < len(prices) - 1:
+                current_index += 1
+            else:
+                results.append((starting_index, current_index))
+                return results
+        else:
+            if current_index < len(prices) - 1:
+                results.append((starting_index, current_index-1))
+                starting_index = current_index
+                current_index = starting_index + 1
+            else:
+                return results
+    return results
