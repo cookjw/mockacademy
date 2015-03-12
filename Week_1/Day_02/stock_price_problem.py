@@ -31,3 +31,10 @@ def list_increasing_sequences(prices):
             else:
                 return results
     return results
+    
+def find_max_profit(prices):
+    increasing_sequences = list_increasing_sequences(prices)
+    profits = []
+    for pair in increasing_sequences:
+        profits.append(prices[pair[1]] - prices[pair[0]])
+    return sum(profits)
