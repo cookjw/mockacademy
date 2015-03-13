@@ -1,0 +1,36 @@
+We begin Day 5 !
+
+(A space, lest it be read as "5 factorial"...)
+
+[According to Julie](http://julieatappacademy.tumblr.com/post/67831450374/week-1-day-5),
+Day 5 of App Academy went as follows:
+
+
+    "-TreeNode: Implemented a class for both binary and n-ary trees, with
+    methods for adding, moving, and removing nodes, depth-first search,
+    breadth-first search, and printing out of a tree.
+    
+    "-Knight’s Travails: Using our new-found knowledge of n-ary trees,
+    we made a class that will take in a starting [x,y] chessboard
+    coordinate and a target coordinate, and give back a set of 
+    coordinates that stood for the shortest path a knight has to take to
+    get from point A to point B.
+    
+    "-Tic-Tac-Toe Super AI: We were starting to run low on time, but we
+    tried to implement a Super-Intellegent Tic-Tac-Toe computer player
+    that theoretically would always win by calculating future boards
+    based on its available moves, and choosing the winning move or a 
+    move that would get to a winning move the fastest."
+    
+
+This means we actually get to learn a bit of computer science as 
+part of the mockacademy curriculum! (It's basic, to be sure, but quite 
+important.) So, let's get started on implementing trees (binary and n-ary)
+in Python.
+
+/// Python: ///
+
+
+
+///
+

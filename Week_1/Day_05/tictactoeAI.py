@@ -17,7 +17,7 @@ class TicTacToe:
     def __init__(self, rows, columns, number, humanplayer):
         self.board = Board(rows, columns, number)
         self.rows = rows
-        self.columns = colimns
+        self.columns = columns
         self.number = number
         self.humanplayer = humanplayer
         if self.humanplayer == "X":
