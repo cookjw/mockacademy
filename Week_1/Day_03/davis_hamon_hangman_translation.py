@@ -133,9 +133,9 @@ class ComputerCondemned:
         self.words = [x[:-1].upper() for x in open('dictionary.txt').readlines()]
      
     def dumb_guess(self):
-        attempt = random.choice(string.asci_letters)
+        attempt = random.choice(string.ascii_letters)
         while attempt in self.previous_guesses:
-            attempt = random.choice(string.asci_letters)            
+            attempt = random.choice(string.ascii_letters)            
         self.previous_guesses.append(attempt)
         return attempt        
         

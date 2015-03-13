@@ -84,7 +84,9 @@ class TicTacToeGame():
 class TicTacToeBoard:
     
     # Creates the board (empty by default).
-    def __init__(self, state = [['_' for _ in range(1, 4)] for _ in range(1,4)]):
+    def __init__(self, state = None):
+        if state is None:
+            state = [['_' for _ in range(1, 4)] for _ in range(1,4)]
         self.state = state
     
     # Returns the mark at indices i, j.
@@ -153,7 +155,7 @@ class TicTacToeBoard:
         elif not self.legal_moves(): # tie
             return '2'
         else: # keep playing
-            # print "no end condition yet"
+            print "no end condition yet"
             return False
             
     # Returns a move location at which supplied +current+ and +target+
