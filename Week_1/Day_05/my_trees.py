@@ -1,10 +1,37 @@
-class TreeError(Exception):
-    pass
 
+class Tree:
+
+    # def __init__(self, root_value=None): 
+        # if root_value is not None:    
+            # self.root = TreeNode(self, value=root_value, is_root=True)
+            # self.nodes = set([self.root])
+        # else:
+            # self.root = None
+            # self.nodes = set([])
+            
+    def __init__(self, root=None):
+        self.root = root
+        if root is not None:            
+            self.nodes = set([self.root])
+            self.root.is_root = True
+        else:
+            self.nodes = set([])                 
+        
+        
+    def add_node(
+        self, parent=self.root, value=None, children=None, is_root=False
+        ):
+        new_node = TreeNode(self, value, chidren, is_root)
+        parent.add_child(new_node)
+        self.nodes.add(new_node)
+        
+     
+
+    
 
 class TreeNode:
-    def __init__(self, tree, value=None, children=None, is_root=False):
-        self.tree = tree
+
+    def __init__(self, value=None, children=None, is_root=False):        
         if children is None:
             self.children = []
         else:
@@ -33,15 +60,9 @@ class TreeNode:
         
         
     
-class Tree:
-    def __init__(self, root_value=None):
-        self.root = TreeNode(self, value=root_value, is_root=True)
-        
-    def add_node(
-        self, parent=self.root, value=None, children=None, is_root=False
-        ):
-        parent.add_child(TreeNode(self, value, chidren, is_root))
-        
+
+class TreeError(Exception):
+    pass          
             
         
     
