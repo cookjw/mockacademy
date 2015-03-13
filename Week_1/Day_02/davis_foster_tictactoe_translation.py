@@ -155,7 +155,7 @@ class TicTacToeBoard:
         elif not self.legal_moves(): # tie
             return '2'
         else: # keep playing
-            print "no end condition yet"
+            # print "no end condition yet"
             return False
             
     # Returns a move location at which supplied +current+ and +target+
