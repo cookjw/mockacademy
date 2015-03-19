@@ -19,14 +19,15 @@ class Tree:
         
         
     def add_node(
-        self, parent=self.root, value=None, children=None, is_root=False
+        self, parent=None, value=None, children=None, is_root=False
         ):
         if parent:
-            new_node = TreeNode(self, value, children, is_root)
+            new_node = TreeNode(value, children, is_root)
             parent.add_child(new_node)
             self.nodes.add(new_node)
         else:
-            self.root = TreeNode(self, value, children, is_root=True)
+            parent = self.root
+            self.root = TreeNode(value, children, is_root=True)
             self.nodes = set([self.root])    
 
     
@@ -59,6 +60,9 @@ class TreeNode:
                 raise TreeError(
                     "root can't be a child!"
                     )        
+                    
+    def remove(self):
+        pass
         
         
     
