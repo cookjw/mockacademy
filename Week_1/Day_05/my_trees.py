@@ -11,7 +11,7 @@ class Tree:
             
     def __init__(self, root=None):
         self.root = root
-        if root is not None:            
+        if self.root is not None:            
             self.nodes = set([self.root])
             self.root.is_root = True
         else:
@@ -21,11 +21,13 @@ class Tree:
     def add_node(
         self, parent=self.root, value=None, children=None, is_root=False
         ):
-        new_node = TreeNode(self, value, chidren, is_root)
-        parent.add_child(new_node)
-        self.nodes.add(new_node)
-        
-     
+        if parent:
+            new_node = TreeNode(self, value, children, is_root)
+            parent.add_child(new_node)
+            self.nodes.add(new_node)
+        else:
+            self.root = TreeNode(self, value, children, is_root=True)
+            self.nodes = set([self.root])    
 
     
 
