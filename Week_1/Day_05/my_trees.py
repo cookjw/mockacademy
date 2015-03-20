@@ -1,3 +1,4 @@
+from collections import deque
 
 class Tree:
 
@@ -28,12 +29,42 @@ class Tree:
         else:
             parent = self.root
             self.root = TreeNode(value, children, is_root=True)
-            self.nodes = set([self.root])    
+            self.nodes = set([self.root])  
+            
+    def contains_DFS(self, node):
+        if self.root:
+            stack = [self.root]
+            while stack:
+                v = stack.pop()
+                if v != node:
+                    for child in v.children:
+                        stack.append(v)
+                else:
+                    return True
+            return False
+        else:
+            return False
+        
+    
+    def contains_BFS(self, node):
+        if self.root:
+            queue = deque([self.root])
+            while queue:
+                v = queue.popleft()
+                if v != node:
+                    for child in v.children:
+                        queue.append(v)
+                else:
+                    return True
+            return False
+            else:
+                return False
+        
 
     
 
 class TreeNode:
-
+    
     def __init__(self, value=None, children=None, is_root=False):        
         if children is None:
             self.children = []
