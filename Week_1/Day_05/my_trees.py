@@ -26,10 +26,18 @@ class Tree:
             new_node = TreeNode(value, children, is_root)
             parent.add_child(new_node)
             self.nodes.add(new_node)
-        else:
+            return new_node
+        elif self.root:
             parent = self.root
+            new_node = TreeNode(value, children, is_root)
+            parent.add_child(new_node)
+            self.nodes.add(new_node)
+            return new_node            
+        else:
             self.root = TreeNode(value, children, is_root=True)
-            self.nodes = set([self.root])  
+            self.nodes = set([self.root])
+            return self.root
+            
             
     def contains_DFS(self, node):
         if self.root:
