@@ -17,17 +17,21 @@ class Tree:
             new_node = TreeNode(value, children, is_root)
             parent.add_child(new_node)
             self.nodes.add(new_node)
+            self.check_binary()
             return new_node
         elif self.root:
             parent = self.root
             new_node = TreeNode(value, children, is_root)
             parent.add_child(new_node)
             self.nodes.add(new_node)
+            self.check_binary()
             return new_node            
         else:
             self.root = TreeNode(value, children, is_root=True)
             self.nodes = set([self.root])
+            self.check_binary()
             return self.root
+        
             
     def delete_node(self, node):
         descendants = self.get_descendants_DFS(node)                
@@ -50,7 +54,7 @@ class Tree:
             raise TreeError("Can't move root node!")
         else:
             raise TreeError("Node not in tree.")
-                
+        self.check_binary()
             
                         
             
@@ -87,9 +91,31 @@ class Tree:
     def contains_BFS(self, node):
         nodes = self.get_descendants_BFS(self.root)
         return node in nodes    
+        
+    def check_binary(self):
+        if isinstance(self, BinaryTree):
+            self.binary_check()
+            
 
    
-
+class BinaryTree(Tree):
+    
+    def __init__(self):
+        Tree.__init__(self)
+        self.binary_check()
+        
+    def binary_check(self):
+        for node in self.nodes:
+            if len(node.children) <= 2:
+                pass
+            else:
+                raise TreeError(
+                "Binary tree node has more than two children."
+                )
+        
+   
+   
+   
 class TreeNode:
     
     def __init__(self, value=None, children=None, is_root=False):        
