@@ -38,7 +38,7 @@ class Tree:
                 v = stack.pop()
                 if v != node:
                     for child in v.children:
-                        stack.append(v)
+                        stack.append(child)
                 else:
                     return True
             return False
@@ -53,7 +53,7 @@ class Tree:
                 v = queue.popleft()
                 if v != node:
                     for child in v.children:
-                        queue.append(v)
+                        queue.append(child)
                 else:
                     return True
             return False

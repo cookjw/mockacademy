@@ -27,6 +27,12 @@ class TreeTest(unittest.TestCase):
         
     def test_root_node_has_two_children(self):
         pass
+    
+    def test_DFS_can_find_node(self):
+        pass
+    
+    def test_BFS_can_find_node(self):
+        pass
         
         
         
