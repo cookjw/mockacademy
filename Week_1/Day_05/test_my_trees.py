@@ -2,15 +2,16 @@ import unittest
 
 import my_trees
 
-
-my_tree = my_trees.Tree()
-root = my_tree.add_node(value=0)
-node_1 = my_tree.add_node(parent=root, value=1)
-node_2 = my_tree.add_node(parent=root, value=2)
-node_3 = my_tree.add_node(parent=node_1, value=3)
-node_4 = my_tree.add_node(parent=node_1, value=4)
-node_5 = my_tree.add_node(parent=node_2, value=5)
-node_6 = my_tree.add_node(parent=node_2, value=6)    
+def construct_tree():
+    global my_tree, root, node_1, node_2, node_3, node_4, node_5, node_6    
+    my_tree = my_trees.Tree()
+    root = my_tree.add_node(value=0)
+    node_1 = my_tree.add_node(parent=root, value=1)
+    node_2 = my_tree.add_node(parent=root, value=2)
+    node_3 = my_tree.add_node(parent=node_1, value=3)
+    node_4 = my_tree.add_node(parent=node_1, value=4)
+    node_5 = my_tree.add_node(parent=node_2, value=5)
+    node_6 = my_tree.add_node(parent=node_2, value=6)    
 
 
 class TreeTest(unittest.TestCase):
@@ -37,26 +38,42 @@ class TreeTest(unittest.TestCase):
         
     
     def test_can_add_node(self):
+        construct_tree()
         self.assertEqual(my_tree.nodes, set([root, node_1, node_2, node_3,
         node_4, node_5, node_6]))
         self.assertEqual(root.children, [node_1, node_2])
         self.assertEqual(node_1.children, [node_3, node_4])
-        self.assertEqual(node_2.children, [node_5, node_6])       
+        self.assertEqual(node_2.children, [node_5, node_6]) 
+
+    def test_can_delete_node(self):
+        construct_tree()
+        my_tree.delete_node(node_6)
+        self.assertNotIn(node_6, my_tree.nodes)        
+        construct_tree() 
+        self.assertIn(node_6, my_tree.nodes)
+        my_tree.delete_node(node_2)
+        self.assertNotIn(node_2, my_tree.nodes)
+        self.assertNotIn(node_6, my_tree.nodes)           
 
     
     def test_DFS_can_find_node(self):
+        construct_tree()
         for node in my_tree.nodes:
             self.assertTrue(my_tree.contains_DFS(node))
 
     def test_DFS_cannot_find_absent_node(self):
+        construct_tree()
         self.assertFalse(my_tree.contains_DFS(my_trees.TreeNode(value=100)))    
     
     def test_BFS_can_find_node(self):
+        construct_tree()
         for node in my_tree.nodes:
             self.assertTrue(my_tree.contains_BFS(node))
             
     def test_BFS_cannot_find_absent_node(self):
+        construct_tree()
         self.assertFalse(my_tree.contains_BFS(my_trees.TreeNode(value=100)))     
+    
     
     
         

@@ -38,6 +38,19 @@ class Tree:
             self.nodes = set([self.root])
             return self.root
             
+    def delete_node(self, node):
+        self.nodes.remove(node)
+        for potential_parent in self.nodes:
+            # Somehow using try/except for control flow feels slightly abusive;
+            # I wonder if this intuition is sound.
+            try: 
+                potential_parent.children.remove(node)
+                break                 
+            except ValueError:
+                pass        
+        for child in node.children:
+             self.delete_node(child)
+            
             
     def contains_DFS(self, node):
         if self.root:
