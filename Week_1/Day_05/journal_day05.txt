@@ -30,5 +30,372 @@ in Python.
 
 /// Python: ///
 
+from collections import deque
+
+class Tree:
+            
+    def __init__(self, root=None):
+        self.root = root
+        if self.root is not None:            
+            self.nodes = set([self.root])
+            self.root.is_root = True
+        else:
+            self.nodes = set([])            
+        
+    def add_node(
+        self, parent=None, value=None, children=None, is_root=False
+        ):
+        if parent:
+            new_node = TreeNode(value, children, is_root)
+            parent.add_child(new_node)
+            self.nodes.add(new_node)
+            self.check_binary()
+            return new_node
+        elif self.root:
+            parent = self.root
+            new_node = TreeNode(value, children, is_root)
+            parent.add_child(new_node)
+            self.nodes.add(new_node)
+            self.check_binary()
+            return new_node            
+        else:
+            self.root = TreeNode(value, children, is_root=True)
+            self.nodes = set([self.root])
+            self.check_binary()
+            return self.root
+        
+            
+    def delete_node(self, node):
+        descendants = self.get_descendants_DFS(node)                
+        assert set(descendants) == set(self.get_descendants_BFS(node))
+        for descendant in descendants:
+            self.nodes.remove(descendant)
+            del descendant.children
+            
+    def move_node(self, node, new_parent, position=None):
+        if node in self.nodes and not node.is_root:
+            parent = [x for x in self.nodes if node in x.children][0]
+            parent.children.remove(node)
+            if position is None:
+                new_parent.children.append(node)
+            else:
+                children = new_parent.children
+                new_parent.children = children[:position] + [node] + \
+                    children[position:]
+        elif node.is_root:
+            raise TreeError("Can't move root node!")
+        else:
+            raise TreeError("Node not in tree.")
+        self.check_binary()
+            
+                        
+            
+    def get_descendants_DFS(self, node):
+        if node in self.nodes:
+            descendants = []
+            stack = [node]
+            while stack:
+                v = stack.pop()
+                descendants.append(v)
+                for child in v.children:
+                    stack.append(child)
+            return descendants
+        else:
+            raise TreeError("Node not in tree.")
+        
+    def get_descendants_BFS(self, node):
+        if node in self.nodes:
+            descendants = []
+            queue = deque([node])
+            while queue:
+                v = queue.popleft()
+                descendants.append(v)
+                for child in v.children:
+                    queue.append(child)
+            return descendants
+        else:
+            raise TreeError("Node not in tree.")
+            
+    def contains_DFS(self, node):    
+        nodes = self.get_descendants_DFS(self.root)
+        return node in nodes        
+    
+    def contains_BFS(self, node):
+        nodes = self.get_descendants_BFS(self.root)
+        return node in nodes    
+        
+    def check_binary(self):
+        if isinstance(self, BinaryTree):
+            self.binary_check()
+            
+
+   
+class BinaryTree(Tree):
+    
+    def __init__(self):
+        Tree.__init__(self)
+        self.binary_check()
+        
+    def binary_check(self):
+        for node in self.nodes:
+            if len(node.children) <= 2:
+                pass
+            else:
+                raise TreeError(
+                "Binary tree node has more than two children."
+                )
+        
+   
+   
+   
+class TreeNode:
+    
+    def __init__(self, value=None, children=None, is_root=False):        
+        if children is None:
+            self.children = []
+        else:
+            self.children = children
+        self.value = value
+        self.is_root = is_root
+        
+    def __repr__(self):
+        return "TreeNode with value {}".format(self.value)
+        
+    def add_child(self, node):
+        self.children.append(node)
+        self.check_children()
+        
+    def check_children(self):
+        children = self.children
+        if len(children) != len(set(children)):
+            raise TreeError(
+                "list of children can't contain duplicates!"
+                )
+        for child in children:
+            if child.is_root:
+                raise TreeError(
+                    "root can't be a child!"
+                    )        
+                    
+class TreeError(Exception):
+    pass          
+            
+    
+
+///
+
+Even though I'm not supposed to know about testing at this point in the
+curriculum, I went ahead and wrote tests, because they were very
+helpful:
+
+/// Python: test_my_trees.py ///
+
+import unittest
+
+import my_trees
+
+def construct_tree():
+    global my_tree, root, node_1, node_2, node_3, node_4, node_5, node_6    
+    my_tree = my_trees.Tree()
+    root = my_tree.add_node(value=0)
+    node_1 = my_tree.add_node(parent=root, value=1)
+    node_2 = my_tree.add_node(parent=root, value=2)
+    node_3 = my_tree.add_node(parent=node_1, value=3)
+    node_4 = my_tree.add_node(parent=node_1, value=4)
+    node_5 = my_tree.add_node(parent=node_2, value=5)
+    node_6 = my_tree.add_node(parent=node_2, value=6)   
+
+def construct_binary_tree():
+    global my_binary_tree, broot, bnode_1, bnode_2, bnode_3, bnode_4,\
+    bnode_5, bnode_6    
+    my_binary_tree = my_trees.BinaryTree()
+    broot = my_binary_tree.add_node(value=0)
+    bnode_1 = my_binary_tree.add_node(parent=broot, value=1)
+    bnode_2 = my_binary_tree.add_node(parent=broot, value=2)
+    bnode_3 = my_binary_tree.add_node(parent=bnode_1, value=3)
+    bnode_4 = my_binary_tree.add_node(parent=bnode_1, value=4)
+    bnode_5 = my_binary_tree.add_node(parent=bnode_2, value=5)
+    bnode_6 = my_binary_tree.add_node(parent=bnode_2, value=6)          
+
+construct_tree() 
+
+construct_binary_tree()
+
+class TreeTest(unittest.TestCase):
+
+    def test_create_empty_tree(self):
+        my_tree = my_trees.Tree()
+        self.assertEqual(my_tree.root, None)
+        self.assertEqual(my_tree.nodes, set([]))
+        
+    def test_create_tree_with_one_valueless_node(self):
+        my_node = my_trees.TreeNode()
+        my_tree = my_trees.Tree(root=my_node)
+        self.assertEqual(my_node.children, [])
+        self.assertEqual(my_tree.root, my_node)
+        self.assertEqual(my_tree.nodes, set([my_node]))
+        
+    def test_create_tree_with_one_valued_node(self):
+        my_node = my_trees.TreeNode(value=2)
+        my_tree = my_trees.Tree(root=my_node)
+        self.assertEqual(my_node.__repr__(), "TreeNode with value 2")
+        self.assertEqual(str(my_node), "TreeNode with value 2")
+        self.assertEqual(my_node.children, [])
+        self.assertEqual(my_tree.root, my_node)
+        self.assertEqual(my_tree.nodes, set([my_node]))
+        
+    
+    def test_can_add_node(self):        
+        self.assertEqual(
+            my_tree.nodes, set([root, node_1, node_2, node_3,
+                node_4, node_5, node_6])
+                )
+        self.assertEqual(root.children, [node_1, node_2])
+        self.assertEqual(node_1.children, [node_3, node_4])
+        self.assertEqual(node_2.children, [node_5, node_6]) 
+
+    def test_can_delete_node(self):         
+        self.assertIn(node_6, my_tree.nodes)        
+        my_tree.delete_node(node_6)
+        self.assertNotIn(node_6, my_tree.nodes)        
+        construct_tree() 
+        self.assertIn(node_6, my_tree.nodes)
+        my_tree.delete_node(node_2)
+        self.assertNotIn(node_2, my_tree.nodes)
+        self.assertNotIn(node_6, my_tree.nodes) 
+        construct_tree()        
+
+    def test_can_move_node(self):
+        my_tree.move_node(node_4, node_2)
+        self.assertIn(node_4, node_2.children)
+        self.assertNotIn(node_4, node_1.children)
+        construct_tree()
+        my_tree.move_node(node_4, node_2, 1)
+        self.assertEqual(node_2.children, [node_5, node_4, node_6])
+        construct_tree()
+        my_tree.move_node(node_4, node_2, 2)
+        self.assertEqual(node_2.children, [node_5, node_6, node_4])
+        construct_tree()        
+        my_tree.move_node(node_4, node_2, 0)
+        self.assertEqual(node_2.children, [node_4, node_5, node_6])
+        construct_tree()  
+ 
+    def test_DFS_can_find_node(self):        
+        for node in my_tree.nodes:
+            self.assertTrue(my_tree.contains_DFS(node))
+
+    def test_DFS_cannot_find_absent_node(self):        
+        self.assertFalse(
+            my_tree.contains_DFS(my_trees.TreeNode(value=100))
+        )    
+    
+    def test_BFS_can_find_node(self):        
+        for node in my_tree.nodes:
+            self.assertTrue(my_tree.contains_BFS(node))
+            
+    def test_BFS_cannot_find_absent_node(self):        
+        self.assertFalse(my_tree.contains_BFS(
+            my_trees.TreeNode(value=100))
+        )    
+
+    def test_can_get_subtree_DFS(self):
+        self.assertEqual(
+            set(my_tree.get_descendants_DFS(root)), my_tree.nodes
+        )
+        
+    def test_can_get_subtree_BFS(self):
+        self.assertEqual(
+            set(my_tree.get_descendants_BFS(root)), my_tree.nodes
+        )
+        
+    def test_construct_tree(self):
+        self.assertEqual(len(my_tree.nodes), 7)         
+    
+    
+    
+class BinaryTreeTest(unittest.TestCase):
+    
+    def test_checks_binarity_when_adding(self):        
+        self.assertRaises(
+            my_trees.TreeError, my_binary_tree.add_node, parent=broot, 
+            value=2.5
+        )    
+        self.assertRaises(
+            my_trees.TreeError, my_binary_tree.add_node, parent=bnode_2,
+            value=7            
+        )
+        
+    def test_checks_binarity_when_moving(self):
+        with self.assertRaises(my_trees.TreeError):
+            my_binary_tree.move_node(bnode_4, bnode_2)
+        with self.assertRaises(my_trees.TreeError):
+            my_binary_tree.move_node(bnode_4, bnode_2, 0)                        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+    
+
+
+
+if __name__ == '__main__':
+    unittest.main()
+
+///
+
+
+
+My implementation of Knight's Travails:
+
+
+/// Python: knights_travails.py ///
+
+from collections import deque
+
+def on_board(square):
+    return (square[0] in range(1,9)) and (square[1] in range(1,9))
+
+def legal_moves(starting_square):
+    if on_board(starting_square):
+        x = starting_square[0]
+        y = starting_square[1]
+        preliminary_list = [
+                (x+m, y+n) for m in (-2,-1,1,2) for n in (-2,-1,1,2)
+                if abs(m) != abs(n)
+            ]
+        return filter(on_board, preliminary_list)
+    else:
+        raise Exception("{} not on board!".format(str(starting_square)))
+
+def knight_path(origin, destination):
+    ancestors = {}    
+    queue = deque([origin])
+    while queue:
+        item = queue.popleft()
+        if item == destination:
+            path = [item]            
+            while item != origin:
+                path.append(ancestors[item])
+                item = ancestors[item]
+            return path[::-1]
+        else:
+            for child in legal_moves(item):
+                if not child in ancestors:    
+                    ancestors[child] = item
+                    queue.append(child)
+                
+                    
+    
+        
+                
+    
+    
+    
 
 ///
