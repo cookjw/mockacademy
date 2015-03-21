@@ -8,8 +8,7 @@ class Tree:
             self.nodes = set([self.root])
             self.root.is_root = True
         else:
-            self.nodes = set([])                 
-        
+            self.nodes = set([])            
         
     def add_node(
         self, parent=None, value=None, children=None, is_root=False
@@ -37,58 +36,59 @@ class Tree:
             self.nodes.remove(descendant)
             del descendant.children
             
-    def get_descendants_DFS(self, node):
-        descendants = []
-        stack = [node]
-        while stack:
-            v = stack.pop()
-            descendants.append(v)
-            for child in v.children:
-                stack.append(child)
-        return descendants
-        
-    def get_descendants_BFS(self, node):
-        descendants = []
-        queue = deque([node])
-        while queue:
-            v = queue.popleft()
-            descendants.append(v)
-            for child in v.children:
-                queue.append(child)
-        return descendants
+    def move_node(self, node, new_parent, position=None):
+        if node in self.nodes and not node.is_root:
+            parent = [x for x in self.nodes if node in x.children][0]
+            parent.children.remove(node)
+            if position is None:
+                new_parent.children.append(node)
+            else:
+                children = new_parent.children
+                new_parent.children = children[:position] + [node] + \
+                    children[position:]
+        elif node.is_root:
+            raise TreeError("Can't move root node!")
+        else:
+            raise TreeError("Node not in tree.")
+                
             
-    def contains_DFS(self, node):
-        if self.root:
-            stack = [self.root]
+                        
+            
+    def get_descendants_DFS(self, node):
+        if node in self.nodes:
+            descendants = []
+            stack = [node]
             while stack:
                 v = stack.pop()
-                if v != node:
-                    for child in v.children:
-                        stack.append(child)
-                else:
-                    return True
-            return False
+                descendants.append(v)
+                for child in v.children:
+                    stack.append(child)
+            return descendants
         else:
-            return False
+            raise TreeError("Node not in tree.")
         
-    
-    def contains_BFS(self, node):
-        if self.root:
-            queue = deque([self.root])
+    def get_descendants_BFS(self, node):
+        if node in self.nodes:
+            descendants = []
+            queue = deque([node])
             while queue:
                 v = queue.popleft()
-                if v != node:
-                    for child in v.children:
-                        queue.append(child)
-                else:
-                    return True
-            return False
+                descendants.append(v)
+                for child in v.children:
+                    queue.append(child)
+            return descendants
         else:
-            return False
-        
-        
-
+            raise TreeError("Node not in tree.")
+            
+    def contains_DFS(self, node):    
+        nodes = self.get_descendants_DFS(self.root)
+        return node in nodes        
     
+    def contains_BFS(self, node):
+        nodes = self.get_descendants_BFS(self.root)
+        return node in nodes    
+
+   
 
 class TreeNode:
     
@@ -119,12 +119,6 @@ class TreeNode:
                     "root can't be a child!"
                     )        
                     
-    def remove(self):
-        pass
-        
-        
-    
-
 class TreeError(Exception):
     pass          
             

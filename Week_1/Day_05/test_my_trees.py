@@ -56,7 +56,21 @@ class TreeTest(unittest.TestCase):
         self.assertNotIn(node_6, my_tree.nodes) 
         construct_tree()        
 
-    
+    def test_can_move_node(self):
+        my_tree.move_node(node_4, node_2)
+        self.assertIn(node_4, node_2.children)
+        self.assertNotIn(node_4, node_1.children)
+        construct_tree()
+        my_tree.move_node(node_4, node_2, 1)
+        self.assertEqual(node_2.children, [node_5, node_4, node_6])
+        construct_tree()
+        my_tree.move_node(node_4, node_2, 2)
+        self.assertEqual(node_2.children, [node_5, node_6, node_4])
+        construct_tree()        
+        my_tree.move_node(node_4, node_2, 0)
+        self.assertEqual(node_2.children, [node_4, node_5, node_6])
+        construct_tree()  
+ 
     def test_DFS_can_find_node(self):        
         for node in my_tree.nodes:
             self.assertTrue(my_tree.contains_DFS(node))
