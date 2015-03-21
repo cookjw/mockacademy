@@ -18,10 +18,8 @@ def legal_moves(starting_square):
 def knight_path(origin, destination):
     ancestors = {}    
     queue = deque([origin])
-    n = 1
     while queue:
         item = queue.popleft()
-        n += 1
         if item == destination:
             path = [item]            
             while item != origin:
