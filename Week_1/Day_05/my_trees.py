@@ -1,14 +1,6 @@
 from collections import deque
 
 class Tree:
-
-    # def __init__(self, root_value=None): 
-        # if root_value is not None:    
-            # self.root = TreeNode(self, value=root_value, is_root=True)
-            # self.nodes = set([self.root])
-        # else:
-            # self.root = None
-            # self.nodes = set([])
             
     def __init__(self, root=None):
         self.root = root
@@ -39,18 +31,31 @@ class Tree:
             return self.root
             
     def delete_node(self, node):
-        self.nodes.remove(node)
-        for potential_parent in self.nodes:
-            # Somehow using try/except for control flow feels slightly abusive;
-            # I wonder if this intuition is sound.
-            try: 
-                potential_parent.children.remove(node)
-                break                 
-            except ValueError:
-                pass        
-        for child in node.children:
-             self.delete_node(child)
+        descendants = self.get_descendants_DFS(node)                
+        assert set(descendants) == set(self.get_descendants_BFS(node))
+        for descendant in descendants:
+            self.nodes.remove(descendant)
+            del descendant.children
             
+    def get_descendants_DFS(self, node):
+        descendants = []
+        stack = [node]
+        while stack:
+            v = stack.pop()
+            descendants.append(v)
+            for child in v.children:
+                stack.append(child)
+        return descendants
+        
+    def get_descendants_BFS(self, node):
+        descendants = []
+        queue = deque([node])
+        while queue:
+            v = queue.popleft()
+            descendants.append(v)
+            for child in v.children:
+                queue.append(child)
+        return descendants
             
     def contains_DFS(self, node):
         if self.root:
