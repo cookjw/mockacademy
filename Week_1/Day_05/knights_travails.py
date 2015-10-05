@@ -16,8 +16,10 @@ def legal_moves(starting_square):
         raise Exception("{} not on board!".format(str(starting_square)))
 
 def knight_path(origin, destination):
+    origin = tuple(origin)
+    destination = tuple(destination)
     ancestors = {}    
-    queue = deque([origin])
+    queue = deque([origin])    
     while queue:
         item = queue.popleft()
         if item == destination:
@@ -25,12 +27,13 @@ def knight_path(origin, destination):
             while item != origin:
                 path.append(ancestors[item])
                 item = ancestors[item]
-            return path[::-1]
-        else:
+            return path[::-1]            
+        else:            
             for child in legal_moves(item):
                 if not child in ancestors:    
                     ancestors[child] = item
                     queue.append(child)
+        
                 
                     
     
