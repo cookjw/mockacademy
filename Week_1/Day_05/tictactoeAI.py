@@ -6,21 +6,31 @@
 
 class TTTSquare:
     def __init__(self, row, column):
-	    self.value = ""
-		self.row = row
-		self.column = column
+        self.value = ""
+        self.row = row
+        self.column = column
+        
+    def set(self, value):
+        self.check_value()
+        self.value = value
+        self.check_value()
+    
+    def check_value(self):
+        if not self.value in ["", "X", "O"]:
+            raise Exception("Square value not valid!")
+        
 
 
 class TTTBoard:
     def __init__(self, rows, columns):
-	    self.rows = rows
-		self.columns = columns
-		self.squares = []
-		for row in range(rows):
-		    for column in range(columns):
-			    square = TTTSquare(row, column)
-				self.squares.append(square)
-				
+        self.rows = rows
+        self.columns = columns
+        self.squares = []
+        for row in range(rows):
+            for column in range(columns):
+                square = TTTSquare(row, column)
+                self.squares.append(square)
+                
     def get_square(row, column):
 	    results = []
 		for square in self.squares:
