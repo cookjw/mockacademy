@@ -1,92 +1,116 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Unfinished (displays board and tests end conditions).
+# CURRENT STATUS: Starting over (this is, after all, what version control is for).
 
+class TTTSquare:
+    def __init__(self, row, column):
+	    self.value = ""
+		self.row = row
+		self.column = column
 
-def next(coordinates, direction):
-    if direction == "horizontal":
-        return (coordinates[0], coordinates[1]+1)
-    if direction == "vertical":
-        return (coordinates[0]+1, coordinates[1])
-    if direction == "diagonal":
-        return (coordinates[0]+1, coordinates[1]+1)
+class TTTBoard:
+    def __init__(self, rows, columns):
+	    self.rows = rows
+		self.columns = columns
+		self.squares = []
+		for row in range(rows):
+		    for column in range(columns):
+			    square = TTTSquare(row, column)
+				self.squares.append(square)
+				
+    def get_square(row, column):
+	    results = []
+		for square in self.squares:
+		    if square.row == row and square.column == column:
+			    results.append(square)
+		if len(results) == 1:
+		    return results[0]
+		else:
+		    raise Exception("Yikes! More than one square with the same coordinates!")
+	
+	def board_full(self):
+	    """
+	    checks whether board is full
+	    """
+	    for square in self.squares:
+		    if square.value == ""
+			    return False
+		return True
+				
+	def victory(self, symbol):
+	    """
+		checks whether a player ("symbol") has won
+		"""
+	    self.check_rows(symbol)
+		self.check_columns(symbol)
+		self.check_diagonals(symbol)
+		
+	def check_rows(self, symbol):	    
+	    for row in range(self.rows):
+            answer = True
+            # reset to True each time			
+		    for column in range(self, columns):
+			    square = self.get_square(row, column)
+				if square.value != symbol:
+				    answer = False
+				    break
+					#stop checking this row and move to next row
+			if answer == True:
+			# i.e. only values in row equal to target, 
+			#i.e., victory condition
+			    break
+				#don't go on to check additional rows
+		return answer
+		
+	def check_columns(self, symbol):	    
+		for column in range(self.columns):
+		    answer = True
+		    for row in range(self, rows):
+			    square = self.get_square(row, column)
+				if square.value != symbol:
+				    answer = False
+				    break
+            if answer == True:
+                break
+        return answer
 
-
-class TicTacToe:
-
-    def __init__(self, rows, columns, number, humanplayer):
-        self.board = Board(rows, columns, number)
-        self.rows = rows
-        self.columns = columns
-        self.number = number
-        self.humanplayer = humanplayer
-        if self.humanplayer == "X":
-            self.computerplayer = "O"
-        if self.humanplayer == "O":
-            self.computerplayer = "X"    
+    def check_diagonals(self, symbol):
+	    answer = True
+        row = 0
+		column = 0		
+		while row <= self.rows:
+			square = self.get_square(row, column)
+			if square.value != symbol:
+			    answer = False
+				break
+			row += 1
+			column = row
+		if answer:
+            return answer		
+		else:	
+		    answer = True
+		    row = self.rows
+		    column = 0
+		    while row >= 0:			    
+        	    square = self.get_square(row, column)	
+			    if square.value != symbol:
+			        answer = False
+				    break
+			    row -= 1
+			    column += 1
+			return answer
+				
+			
+				
+				
+		    
+		    
+			 
+				
+		
+		
+		
 
     
-    def play(self):    
-        while not (self.board.wins("X") or self.board.wins("O")) and not self.board.full():        
-            self.board.displayboard()  
-            horiz = int(raw_input("Enter row number, starting from top: \n")) - 1
-            vert = int(raw_input("Enter column number, starting from left: \n")) - 1
-            symbol = raw_input("Enter symbol: \n")
-            self.board.state[(horiz, vert)] = symbol
-        for symbol in ["X", "O"]:
-            if self.board.wins(symbol):
-                self.board.displayboard()
-                print symbol + " " + "wins!"
-        if self.board.full():
-            self.board.displayboard()
-            print "Board Full!"
-                        
-        
-        
-class Board:
 
-    def __init__(self, rows, columns, number, symbol="X"):
-        state = {}
-        for row in range(rows):
-            for column in range(columns):
-                state[(row, column)] = "_"
-        self.state = state
-        self.rows = rows
-        self.columns = columns  
-        self.number = number 
-        self.symbol = symbol        
-
-
-    def displayboard(self):        
-        for row in range(self.rows):
-            printcoord = ""
-            for column in range(self.columns):
-                printcoord = printcoord + " " + str(self.state[(row, column)]) 
-            print printcoord  
-            
-    def full(self):
-        for square in self.state:
-            if self.state[square] == "_":
-                return False
-        return True
-
-    def wins(self, symbol):    
-        directions = ["horizontal", "vertical", "diagonal"]
-        for direction in directions:        
-            for square in self.state:            
-                currentsquare = square
-                in_a_row = 0            
-                while currentsquare in self.state and self.state[currentsquare] == symbol:
-                    in_a_row += 1
-                    currentsquare = next(currentsquare, direction)
-                if in_a_row >= self.number:
-                    return True
-        return False              
-
-    
-    
-    
-    
-game = TicTacToe(3,3,3,"X")    
-game.play()    
         
