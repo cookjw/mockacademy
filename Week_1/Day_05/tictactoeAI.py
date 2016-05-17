@@ -57,7 +57,11 @@ class TTTBoard:
         self.check_columns(symbol)
         self.check_diagonals(symbol)
         
-    def check_rows(self, symbol):        
+    def check_rows(self, symbol):   
+        """
+		(used by victory) checks whether a player has won in the 
+		horizontal direction
+        """		
         for row in range(self.rows):
             answer = True
             # reset to True each time            
@@ -74,7 +78,11 @@ class TTTBoard:
                 #don't go on to check additional rows
         return answer
         
-    def check_columns(self, symbol):        
+    def check_columns(self, symbol):  
+        """
+		(used by victory) checks whether a player has won in the 
+		vertical direction
+        """		
         for column in range(self.columns):
             answer = True
             for row in range(self, rows):
@@ -87,6 +95,9 @@ class TTTBoard:
         return answer
 
     def check_diagonals(self, symbol):
+	    """
+		(used by victory) checks whether a player has won in a diagonal
+		"""
         answer = True
         row = 0
         column = 0        
