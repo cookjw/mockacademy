@@ -9,8 +9,7 @@ class TTTSquare:
         self.row = row
         self.column = column
         
-    def set(self, value):
-        self.check_value()
+    def set(self, value):        
         self.value = value
         self.check_value()
     
@@ -30,12 +29,12 @@ class TTTBoard:
                 square = TTTSquare(row, column)
                 self.squares.append(square)
                 
-    def get_square(row, column):
+    def get_square(self, row, column):
         results = []
         for square in self.squares:
             if square.row == row and square.column == column:
                 results.append(square)
-        if len(results) == 1:
+        if len(results) <= 1:
             return results[0]
         else:
             raise Exception("Yikes! More than one square with the same coordinates!")
@@ -45,7 +44,7 @@ class TTTBoard:
         checks whether board is full
         """
         for square in self.squares:
-            if square.value == ""
+            if square.value == "":
                 return False
         return True
                 
@@ -59,13 +58,13 @@ class TTTBoard:
         
     def check_rows(self, symbol):   
         """
-		(used by victory) checks whether a player has won in the 
-		horizontal direction
-        """		
+        (used by victory) checks whether a player has won in the 
+        horizontal direction
+        """     
         for row in range(self.rows):
             answer = True
             # reset to True each time            
-            for column in range(self, columns):
+            for column in range(self.columns):
                 square = self.get_square(row, column)
                 if square.value != symbol:
                     answer = False
@@ -80,12 +79,12 @@ class TTTBoard:
         
     def check_columns(self, symbol):  
         """
-		(used by victory) checks whether a player has won in the 
-		vertical direction
-        """		
+        (used by victory) checks whether a player has won in the 
+        vertical direction
+        """     
         for column in range(self.columns):
             answer = True
-            for row in range(self, rows):
+            for row in range(self.rows):
                 square = self.get_square(row, column)
                 if square.value != symbol:
                     answer = False
@@ -95,13 +94,13 @@ class TTTBoard:
         return answer
 
     def check_diagonals(self, symbol):
-	    """
-		(used by victory) checks whether a player has won in a diagonal
-		"""
+        """
+        (used by victory) checks whether a player has won in a diagonal
+        """
         answer = True
         row = 0
         column = 0        
-        while row <= self.rows:
+        while row < self.rows:
             square = self.get_square(row, column)
             if square.value != symbol:
                 answer = False
@@ -112,7 +111,7 @@ class TTTBoard:
             return answer        
         else:    
             answer = True
-            row = self.rows
+            row = self.rows - 1
             column = 0
             while row >= 0:                
                 square = self.get_square(row, column)    
