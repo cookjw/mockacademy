@@ -21,7 +21,7 @@ class BoardFullTestCase(unittest.TestCase): # passes
             square.set(choice(['X', 'O']))
         self.assertTrue(board.board_full())
         
-class VictoryTestCase(unittest.TestCase): # does not pass
+class VictoryTestCase(unittest.TestCase): # now passes
     def runTest(self):  
         board2 = tictactoeAI.TTTBoard(3,3)
         board = board2
