@@ -28,10 +28,10 @@ class VictoryTestCase(unittest.TestCase): # does not pass
         print len(board.squares)
         self.assertFalse(board.victory("X"))
         self.assertFalse(board.victory("O"))
-        # for col_index in range(3):
-            # square = board.get_square(0, col_index)
-            # square.set("X")
-        # self.assertTrue(board.victory("X"))    
+        for col_index in range(3):
+            square = board.get_square(0, col_index)
+            square.set("X")
+        self.assertTrue(board.victory("X"))    
     
         
                     
