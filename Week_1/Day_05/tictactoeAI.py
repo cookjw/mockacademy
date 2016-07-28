@@ -52,9 +52,14 @@ class TTTBoard:
         """
         checks whether a player ("symbol") has won
         """
-        self.check_rows(symbol)
-        self.check_columns(symbol)
-        self.check_diagonals(symbol)
+        if self.check_rows(symbol):
+            return True
+        elif self.check_columns(symbol):
+            return True
+        elif self.check_diagonals(symbol):
+            return True
+        else:
+            return False
         
     def check_rows(self, symbol):   
         """
