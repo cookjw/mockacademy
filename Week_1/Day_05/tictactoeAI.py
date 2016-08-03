@@ -5,7 +5,7 @@
 
 class TTTSquare:
     def __init__(self, row, column):
-        self.value = ""
+        self.value = "_"
         self.row = row
         self.column = column
         
@@ -14,7 +14,7 @@ class TTTSquare:
         self.check_value()
     
     def check_value(self):
-        if not self.value in ["", "X", "O"]:
+        if not self.value in ["_", "X", "O"]:
             raise Exception("Square value not valid!")
         
 
@@ -28,6 +28,20 @@ class TTTBoard:
             for column in range(columns):
                 square = TTTSquare(row, column)
                 self.squares.append(square)
+     
+    def display_row(self, row):
+        row_string = self.get_square(row, 0).value
+        for col in range(1, self.columns):
+            row_string += " " + self.get_square(row, col).value
+        return row_string
+                
+    def display(self):
+        display_string = self.display_row(0)
+        for row in range(1, self.rows):
+            display_string += "\n" + self.display_row(row)       
+        return display_string
+
+            
                 
     def get_square(self, row, column):
         results = []
@@ -44,7 +58,7 @@ class TTTBoard:
         checks whether board is full
         """
         for square in self.squares:
-            if square.value == "":
+            if square.value == "_":
                 return False
         return True
                 
@@ -128,7 +142,16 @@ class TTTBoard:
             return answer
                 
             
-                
+class TTTGame:
+    def __init__(self, rows, columns):
+        self.board = TTTBoard(rows, columns)
+    
+    def play(self):
+        pass
+        
+        
+        
+ 
                 
             
             
