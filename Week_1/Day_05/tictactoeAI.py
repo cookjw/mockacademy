@@ -143,13 +143,29 @@ class TTTBoard:
                 
             
 class TTTGame:
-    def __init__(self, rows, columns):
+    def __init__(self, rows, columns, first_player="X"):
         self.board = TTTBoard(rows, columns)
-    
-    def play(self):
+        self.first_player = first_player
+        
+    def switch_turn(self):
+        if self.turn == "X":
+            self.turn = "O"
+        elif self.turn == "O":
+            self.turn == "X"
+            
+    def get_square_from_player(self, turn): 
+        #will need dependence on player later
         pass
+    
+    def play(self):  
+        self.turn = first_player    
+        while (not self.victory("X") and not self.victory("O")
+            and not self.board_full()):
+            square = get_square_from_player(self.turn) 
+            square.set(self.turn)
+            self.switch_turn()
         
-        
+       
         
  
                 
