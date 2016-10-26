@@ -158,15 +158,23 @@ class TTTGame:
         #will need dependence on nature of player later
         allowable_row_inputs = [str(x) for x in range(self.board.rows)]
         allowable_column_inputs = [str(x) for x in range(self.board.columns)]        
-        row_input = raw_input("Enter row coordinate: ")            
+        row_input = raw_input(
+        "Enter row coordinate for {}: ".format(self.player)
+        )            
         while not row_input in allowable_row_inputs:
             print "Invalid row input. Please try again."
-            row_input = raw_input("Enter row coordinate: ")
+            row_input = raw_input(
+            "Enter row coordinate for {}: ".format(self.player)
+            )
         row_coordinate = int(row_input)
-        column_input = raw_input("Enter column coordinate: ")
+        column_input = raw_input(
+        "Enter column coordinate for {}: ".format(self.player)
+        )
         while not column_input in allowable_column_inputs:
             print "Invalid column input. Please try again. "
-            column_input = raw_input("Enter column coordinate: ")            
+            column_input = raw_input(
+            "Enter column coordinate for {}: ".format(self.player)
+            )            
         column_coordinate = int(column_input)
         return self.board.get_square(row_coordinate, column_coordinate)
     
