@@ -162,8 +162,7 @@ class TTTGame:
         elif self.player == "O":
             self.player = "X"
             
-    def get_square_from_player(self, player): 
-        #will need dependence on nature of player later
+    def get_square_from_player(self, player):         
         if player in self.computer_players:
             pass #do AI magic
         else:
