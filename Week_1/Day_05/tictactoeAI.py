@@ -9,8 +9,9 @@ class TTTSquare:
         self.row = row
         self.column = column
         
-    def set(self, value):        
+    def set(self, value):             
         self.value = value
+
         self.check_value()
     
     def check_value(self):
@@ -43,7 +44,7 @@ class TTTBoard:
 
             
                 
-    def get_square(self, row, column):
+    def get_square(self, row, column): #squares are zero-indexed!
         results = []
         for square in self.squares:
             if square.row == row and square.column == column:
@@ -148,27 +149,57 @@ class TTTGame:
         self.first_player = first_player
         
     def switch_turn(self):
-        if self.turn == "X":
-            self.turn = "O"
-        elif self.turn == "O":
-            self.turn == "X"
+        if self.player == "X":
+            self.player = "O"
+        elif self.player == "O":
+            self.player = "X"
             
-    def get_square_from_player(self, turn): 
-        #will need dependence on player later
-        pass
+    def get_square_from_player(self, player): 
+        #will need dependence on nature of player later
+        allowable_row_inputs = [str(x) for x in range(self.board.rows)]
+        allowable_column_inputs = [str(x) for x in range(self.board.columns)]        
+        row_input = raw_input("Enter row coordinate: ")            
+        while not row_input in allowable_row_inputs:
+            print "Invalid row input. Please try again."
+            row_input = raw_input("Enter row coordinate: ")
+        row_coordinate = int(row_input)
+        column_input = raw_input("Enter column coordinate: ")
+        while not column_input in allowable_column_inputs:
+            print "Invalid column input. Please try again. "
+            column_input = raw_input("Enter column coordinate: ")            
+        column_coordinate = int(column_input)
+        return self.board.get_square(row_coordinate, column_coordinate)
     
     def play(self):  
-        self.turn = first_player    
-        while (not self.victory("X") and not self.victory("O")
-            and not self.board_full()):
-            square = get_square_from_player(self.turn) 
-            square.set(self.turn)
+        print self.board.display()
+        self.player = self.first_player    
+        while (not self.board.victory("X") and not self.board.victory("O")
+            and not self.board.board_full()):
+            square = self.get_square_from_player(self.player)
+            while square.value != "_":
+                print "Square already occupied!"   
+                square = self.get_square_from_player(self.player)                
+            square.set(self.player)                
             self.switch_turn()
+            print self.board.display()
+        if self.board.victory("X"):
+            print "X wins!"
+        elif self.board.victory("O"):
+            print "O wins!"
+        elif self.board.board_full():
+            print "Board full!"
+        else:
+            print "We're out of the loop and I don't know why."
+            
+            
         
-       
+
         
  
-                
+if __name__ == "__main__":
+    game = TTTGame(3,3)
+    game.play()
+          
             
             
              
