@@ -146,9 +146,15 @@ class TTTBoard:
                 
             
 class TTTGame:
-    def __init__(self, rows, columns, first_player="X"):
+    def __init__(
+    self, rows, columns, first_player="X", computer_players=()
+    ):
         self.board = TTTBoard(rows, columns)
         self.first_player = first_player
+        for item in computer_players:
+            if not item in ("X", "O"):
+                raise Exception("invalid computer player!")
+        self.computer_players = computer_players
         
     def switch_turn(self):
         if self.player == "X":
@@ -158,29 +164,36 @@ class TTTGame:
             
     def get_square_from_player(self, player): 
         #will need dependence on nature of player later
-        allowable_row_inputs = [str(x) for x in range(self.board.rows)]
-        allowable_column_inputs = [
-        str(x) for x in range(self.board.columns)
-        ]        
-        row_input = raw_input(
-        "Enter row coordinate for {}: ".format(self.player)
-        )            
-        while not row_input in allowable_row_inputs:
-            print "Invalid row input. Please try again."
+        if player in self.computer_players:
+            pass #do AI magic
+        else:
+            allowable_row_inputs = [
+            str(x) for x in range(self.board.rows)
+            ]
+            allowable_column_inputs = [
+            str(x) for x in range(self.board.columns)
+            ]        
             row_input = raw_input(
             "Enter row coordinate for {}: ".format(self.player)
-            )
-        row_coordinate = int(row_input)
-        column_input = raw_input(
-        "Enter column coordinate for {}: ".format(self.player)
-        )
-        while not column_input in allowable_column_inputs:
-            print "Invalid column input. Please try again. "
+            )            
+            while not row_input in allowable_row_inputs:
+                print "Invalid row input. Please try again."
+                row_input = raw_input(
+                "Enter row coordinate for {}: ".format(self.player)
+                )
+            row_coordinate = int(row_input)
             column_input = raw_input(
             "Enter column coordinate for {}: ".format(self.player)
-            )            
-        column_coordinate = int(column_input)
-        return self.board.get_square(row_coordinate, column_coordinate)
+            )
+            while not column_input in allowable_column_inputs:
+                print "Invalid column input. Please try again. "
+                column_input = raw_input(
+                "Enter column coordinate for {}: ".format(self.player)
+                )            
+            column_coordinate = int(column_input)
+            return self.board.get_square(
+            row_coordinate, column_coordinate
+            )
     
     def play(self):  
         print self.board.display()
