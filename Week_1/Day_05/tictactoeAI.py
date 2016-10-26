@@ -1,6 +1,6 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Broken. (Draw reported as victory for "X")
+# CURRENT STATUS: Human vs. human interface seems to work.
 
 
 class TTTSquare:
