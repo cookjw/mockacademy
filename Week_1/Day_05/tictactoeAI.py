@@ -52,7 +52,9 @@ class TTTBoard:
         if len(results) <= 1:
             return results[0]
         else:
-            raise Exception("Yikes! More than one square with the same coordinates!")
+            raise Exception(
+            "Yikes! More than one square with the same coordinates!"
+            )
     
     def board_full(self):
         """
@@ -157,7 +159,9 @@ class TTTGame:
     def get_square_from_player(self, player): 
         #will need dependence on nature of player later
         allowable_row_inputs = [str(x) for x in range(self.board.rows)]
-        allowable_column_inputs = [str(x) for x in range(self.board.columns)]        
+        allowable_column_inputs = [
+        str(x) for x in range(self.board.columns)
+        ]        
         row_input = raw_input(
         "Enter row coordinate for {}: ".format(self.player)
         )            
@@ -181,8 +185,9 @@ class TTTGame:
     def play(self):  
         print self.board.display()
         self.player = self.first_player    
-        while (not self.board.victory("X") and not self.board.victory("O")
-            and not self.board.board_full()):
+        while (
+        not self.board.victory("X") and not self.board.victory("O")
+        and not self.board.board_full()):
             square = self.get_square_from_player(self.player)
             while square.value != "_":
                 print "Square already occupied!"   
