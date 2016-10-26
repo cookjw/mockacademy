@@ -1,6 +1,6 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Starting over (this is, after all, what version control is for).
+# CURRENT STATUS: Broken. (Draw reported as victory for "X")
 
 
 class TTTSquare:
