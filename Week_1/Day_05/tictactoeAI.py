@@ -5,6 +5,13 @@
 #(Testing a thing.)
 
 
+
+def get_empty_square(segment):
+    for square in segment:
+        if square.value == "_":
+            return square
+        
+        
 class TTTSquare:
     def __init__(self, row, column):
         self.value = "_"
@@ -64,7 +71,6 @@ class TTTBoard:
         for row in range(1, self.rows):
             display_string += "\n" + self.display_row(row)       
         return display_string
-
             
                 
     def get_square(self, row, column): #squares are zero-indexed!
@@ -166,11 +172,13 @@ class TTTBoard:
                 row -= 1
                 column += 1
             return answer
-            
-    def fork_at(self, square, symbol):
+    
+    def segments(self, square):
         """
-        checks whether a square participates in two simulatenous 
-        win opportunities
+        returns [row, column, positive_diagonal, negative_diagonal], 
+        where each item in the list is a list of squares representing
+        a win-condition-relevant segment of the board containg the given
+        square
         """
         row = [
         self.get_square(
@@ -190,10 +198,17 @@ class TTTBoard:
             positive_diagonal = self.positive_diagonal
         else:
             positive_diagonal = []
+        return [row, column, positive_diagonal, negative_diagonal]
+        
+    def fork_at(self, square, symbol):
+        """
+        checks whether a square participates in two simulatenous 
+        win opportunities
+        """
         opportunity_count = 0
         # print "row: " + str(row)
         # print "column: " + str(column)
-        for segment in [row, column, positive_diagonal, negative_diagonal]:
+        for segment in self.segments(square):        
             # print "segment: " + str(segment)
             opportunity = 0
             for location in segment:
@@ -231,7 +246,7 @@ class TTTBoard:
         Step 2 of the AI algorithm in Wikipedia
         """
         opponent = self.get_opponent(symbol)
-        return seek_win(self, opponent)        
+        return self.seek_win(opponent)        
         
     def seek_fork(self, symbol):
         """
@@ -251,15 +266,31 @@ class TTTBoard:
         """
         Step 4, Option 1 of the AI algorithm in Wikipedia
         """
-        pass
+        player = symbol
+        opponent = get_opponent(player)
+        if not self.seek_blockfork_2(player):
+            for square in self:
+                for segment in self.segments(square):
+                    selfcount = 0
+                    oppcount = 0
+                    for aresquay in segment:
+                        if aresquay.value == opponent:
+                            oppcount += 1
+                            break
+                        if aresquay.value == player:
+                            selfcount += 1
+                    if selfcount == self.rows - 2 and oppcount == 0:
+                        return get_empty_square(segment)                    
+            
+            
         
     def seek_blockfork_2(self, symbol):
         """
         Step 4, Option 2 of the AI algorithm in Wikipedia
         """
         opponent = self.get_opponent(symbol)
+        return self.seek_fork(opponent)     
         
-        pass
         
     def get_center(self):
         """
