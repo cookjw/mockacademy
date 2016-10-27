@@ -255,6 +255,8 @@ class TTTBoard:
         """
         Step 4, Option 2 of the AI algorithm in Wikipedia
         """
+        opponent = self.get_opponent(symbol)
+        
         pass
         
     def get_center(self):
