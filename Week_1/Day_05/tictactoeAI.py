@@ -9,6 +9,11 @@ class TTTSquare:
         self.row = row
         self.column = column
         
+    def __repr__(self):
+        return "square ({}, {})".format(
+        str(self.row), str(self.column)
+        )
+        
     def set(self, value):             
         self.value = value
 
@@ -17,6 +22,7 @@ class TTTSquare:
     def check_value(self):
         if not self.value in ["_", "X", "O"]:
             raise Exception("Square value not valid!")
+            
         
 
 
@@ -29,6 +35,15 @@ class TTTBoard:
             for column in range(columns):
                 square = TTTSquare(row, column)
                 self.squares.append(square)
+                
+    def __str__(self):
+        return self.display()
+        
+    def copy(self):
+        new_copy = TTTBoard(self.rows, self.columns)
+        new_copy.squares = []
+        for square in self.squares:
+            new_copy.squares.append(square)
      
     def display_row(self, row):
         row_string = self.get_square(row, 0).value
@@ -143,6 +158,115 @@ class TTTBoard:
                 row -= 1
                 column += 1
             return answer
+    
+    def seek_win(self, symbol):
+        """
+        Step 1 of the AI algorithm in Wikipedia
+        """        
+        for square in self.squares:
+            if square.value == "_":
+                hypothetical_board = self.copy()
+                hypothetical_board.get_square(
+                square.row, square.column
+                ).set(symbol)
+                if hypothetical_board.victory(symbol):
+                    return square        
+        
+    def seek_block(self, symbol):
+        """
+        Step 2 of the AI algorithm in Wikipedia
+        """
+        opponent = self.get_opponent(symbol)
+        return seek_win(self, opponent)        
+        
+    def seek_fork(self, symbol):
+        """
+        Step 3 of the AI algorithm in Wikipedia
+        """
+        pass
+        
+    def seek_blockfork_1(self, symbol):
+        """
+        Step 4, Option 1 of the AI algorithm in Wikipedia
+        """
+        pass
+        
+    def seek_blockfork_2(self, symbol):
+        """
+        Step 4, Option 2 of the AI algorithm in Wikipedia
+        """
+        pass
+        
+    def get_center(self):
+        """
+        Step 5 of the AI algorithm in Wikipedia
+        """
+        if self.rows == self.columns and self.rows % 2 == 1:
+            return self.get_square(self.rows/2, self.columns/2)
+        else:
+            pass
+        
+    def seek_opposite_corner(self):
+        """
+        Step 6 of the AI algorithm in Wikipedia
+        """
+        pass
+        
+    def seek_empty_corner(self):
+        """
+        Step 7 of the AI algorithm in Wikipedia
+        """
+        pass
+        
+    def seek_empty_side(self):
+        """
+        Step 8 of the AI algorithm in Wikipedia
+        """
+        pass
+        
+    def get_opponent(symbol):
+        player = symbol
+        if player == "X":
+            opponent = "O"
+        elif player == "O":
+            opponent = "X"
+        else:
+            raise Exception("invalid player symbol")
+        return opponent
+    
+    def computer_move(self, symbol):
+        """
+        runs an AI program to compute optimal move
+        """
+        player = symbol
+        winning_move = self.seek_win(player)
+        if winning_move:
+            return winning_move
+        blocking_move = self.seek_block(player)
+        if blocking_move:
+            return blocking_move
+        forking_move = self.seek_fork(player)
+        if forking_move:
+            return forking_move
+        blockfork_option_1 = self.seek_blockfork_1(player)
+        if blockfork_option_1:
+            return blockfork_option_1
+        blockfork_option_2 = self.seek_blockfork_2(player)
+        if blockfork_option_2:
+            return blockfork_option_2
+        center = self.get_center()
+        if center.value == "_":
+            return center
+        opposite_corner = self.seek_opposite_corner(player)
+        if opposite_corner:
+            return opposite_corner 
+        empty_corner = self.seek_empty_corner(player)
+        if empty_corner:
+            return empty_corner
+        empty_side = self.seek_empty_side(player)
+        if empty_side:
+            return empty_side
+        pass 
                 
             
 class TTTGame:
@@ -160,11 +284,11 @@ class TTTGame:
         if self.player == "X":
             self.player = "O"
         elif self.player == "O":
-            self.player = "X"
+            self.player = "X" 
             
     def get_square_from_player(self, player):         
         if player in self.computer_players:
-            pass #do AI magic
+            return self.board.computer_move(player)
         else:
             allowable_row_inputs = [
             str(x) for x in range(self.board.rows)
