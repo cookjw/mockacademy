@@ -41,6 +41,23 @@ class VictoryTestCase(unittest.TestCase):
             square.set("X")  
         self.assertTrue(board.victory("X"))
         
+class ForkTestCase(unittest.TestCase):
+    def runTest(self):
+        board = tictactoeAI.TTTBoard(3,3)
+        board.get_square(0,0).set("X")
+        board.get_square(1,0).set("X")
+        board.get_square(0,1).set("X")
+        self.assertTrue(board.fork_at(board.get_square(0,0), "X"))
+        self.assertFalse(board.fork_at(board.get_square(0,0), "O"))
+        board = tictactoeAI.TTTBoard(3,3)
+        self.assertFalse(board.fork_at(board.get_square(0,0), "O"))
+        board.get_square(0,0).set("O")
+        board.get_square(1,1).set("O")
+        board.get_square(0,2).set("O")
+        self.assertTrue(board.fork_at(board.get_square(1,1), "O"))      
+        
+      
+        
 class DisplayTestCase(unittest.TestCase):
     def runTest(self):
         board = tictactoeAI.TTTBoard(3,3)
