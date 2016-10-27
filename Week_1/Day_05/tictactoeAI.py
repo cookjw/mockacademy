@@ -1,6 +1,6 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Human vs. human interface seems to work.
+# CURRENT STATUS: Fork-detection seems to be working.
 
 
 class TTTSquare:
@@ -35,6 +35,12 @@ class TTTBoard:
             for column in range(columns):
                 square = TTTSquare(row, column)
                 self.squares.append(square)
+        self.positive_diagonal = [
+        self.get_square(index, rows - index -1) for index in range(rows)
+        ]
+        self.negative_diagonal = [
+        self.get_square(index,index) for index in range(rows)
+        ]
                 
     def __str__(self):
         return self.display()
@@ -158,6 +164,52 @@ class TTTBoard:
                 row -= 1
                 column += 1
             return answer
+            
+    def fork_at(self, square, symbol):
+        """
+        checks whether a square participates in two simulatenous 
+        win opportunities
+        """
+        row = [
+        self.get_square(
+        square.row, column
+        ) for column in range(self.columns)
+        ] 
+        column = [
+        self.get_square(
+        owray, square.column
+        ) for owray in range(self.rows)
+        ]
+        if square.row == square.column:
+            negative_diagonal = self.negative_diagonal
+        else:
+            negative_diagonal = []
+        if square.row + square.column == self.rows - 1:
+            positive_diagonal = self.positive_diagonal
+        else:
+            positive_diagonal = []
+        opportunity_count = 0
+        # print "row: " + str(row)
+        # print "column: " + str(column)
+        for segment in [row, column, positive_diagonal, negative_diagonal]:
+            # print "segment: " + str(segment)
+            opportunity = 0
+            for location in segment:
+                if location.value == self.get_opponent(symbol):
+                    break
+                elif location.value == symbol:
+                    opportunity += 1
+                elif location.value == "_":
+                    continue
+                else:
+                    raise Exception("Something went wrong!")
+            if opportunity >= self.rows - 1:
+                opportunity_count += 1
+        if opportunity_count >= 2:
+            return True
+        else:
+            return False
+                
     
     def seek_win(self, symbol):
         """
@@ -183,7 +235,15 @@ class TTTBoard:
         """
         Step 3 of the AI algorithm in Wikipedia
         """
-        pass
+        for square in self.squares:
+            hypothetical_board = self.copy()
+            h_square = hypothetical_board.get_square(
+            square.row, square.column
+            )
+            h_square.set(symbol)
+            if hypothetical_board.fork_at(h_square, symbol):
+                return square                       
+            
         
     def seek_blockfork_1(self, symbol):
         """
@@ -224,7 +284,7 @@ class TTTBoard:
         """
         pass
         
-    def get_opponent(symbol):
+    def get_opponent(self, symbol):
         player = symbol
         if player == "X":
             opponent = "O"
