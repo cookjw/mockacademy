@@ -6,12 +6,15 @@
 
 
 
+
 def get_empty_square(segment):
     for square in segment:
         if square.value == "_":
             return square
         
         
+
+
 class TTTSquare:
     def __init__(self, row, column):
         self.value = "_"
@@ -71,6 +74,7 @@ class TTTBoard:
         for row in range(1, self.rows):
             display_string += "\n" + self.display_row(row)       
         return display_string
+
             
                 
     def get_square(self, row, column): #squares are zero-indexed!
@@ -172,6 +176,7 @@ class TTTBoard:
                 row -= 1
                 column += 1
             return answer
+
     
     def segments(self, square):
         """
@@ -199,6 +204,10 @@ class TTTBoard:
         else:
             positive_diagonal = []
         return [row, column, positive_diagonal, negative_diagonal]
+
+            
+
+
         
     def fork_at(self, square, symbol):
         """
@@ -208,8 +217,7 @@ class TTTBoard:
         opportunity_count = 0
         # print "row: " + str(row)
         # print "column: " + str(column)
-        for segment in self.segments(square):        
-            # print "segment: " + str(segment)
+        for segment in self.segments(square):   
             opportunity = 0
             for location in segment:
                 if location.value == self.get_opponent(symbol):
@@ -246,7 +254,11 @@ class TTTBoard:
         Step 2 of the AI algorithm in Wikipedia
         """
         opponent = self.get_opponent(symbol)
+
         return self.seek_win(opponent)        
+
+        
+
         
     def seek_fork(self, symbol):
         """
@@ -266,6 +278,7 @@ class TTTBoard:
         """
         Step 4, Option 1 of the AI algorithm in Wikipedia
         """
+
         player = symbol
         opponent = get_opponent(player)
         if not self.seek_blockfork_2(player):
@@ -283,14 +296,20 @@ class TTTBoard:
                         return get_empty_square(segment)                    
             
             
+
         
     def seek_blockfork_2(self, symbol):
         """
         Step 4, Option 2 of the AI algorithm in Wikipedia
         """
         opponent = self.get_opponent(symbol)
+
         return self.seek_fork(opponent)     
         
+
+        
+        
+
         
     def get_center(self):
         """
