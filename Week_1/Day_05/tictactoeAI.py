@@ -35,6 +35,11 @@ class TTTSquare:
         if not self.value in ["_", "X", "O"]:
             raise Exception("Square value not valid!")
             
+    def copy(self):
+        new_copy = TTTSquare(self.row, self.column)
+        new_copy.value = self.value
+        return new_copy
+            
         
 
 
@@ -61,7 +66,8 @@ class TTTBoard:
         new_copy = TTTBoard(self.rows, self.columns)
         new_copy.squares = []
         for square in self.squares:
-            new_copy.squares.append(square)
+            new_copy.squares.append(square.copy())
+        return new_copy
      
     def display_row(self, row):
         row_string = self.get_square(row, 0).value
@@ -245,7 +251,7 @@ class TTTBoard:
                 hypothetical_board = self.copy()
                 hypothetical_board.get_square(
                 square.row, square.column
-                ).set(symbol)
+                ).set(symbol)                
                 if hypothetical_board.victory(symbol):
                     return square        
         
@@ -280,7 +286,7 @@ class TTTBoard:
         """
 
         player = symbol
-        opponent = get_opponent(player)
+        opponent = self.get_opponent(player)
         if not self.seek_blockfork_2(player):
             for square in self:
                 for segment in self.segments(square):
@@ -304,11 +310,7 @@ class TTTBoard:
         """
         opponent = self.get_opponent(symbol)
 
-        return self.seek_fork(opponent)     
-        
-
-        
-        
+        return self.seek_fork(opponent)         
 
         
     def get_center(self):
@@ -320,10 +322,12 @@ class TTTBoard:
         else:
             pass
         
-    def seek_opposite_corner(self):
+    def seek_opposite_corner(self, symbol):
         """
         Step 6 of the AI algorithm in Wikipedia
         """
+        opponent = self.get_opponent(symbol)
+        
         pass
         
     def seek_empty_corner(self):

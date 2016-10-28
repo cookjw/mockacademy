@@ -54,7 +54,14 @@ class ForkTestCase(unittest.TestCase):
         board.get_square(0,0).set("O")
         board.get_square(1,1).set("O")
         board.get_square(0,2).set("O")
-        self.assertTrue(board.fork_at(board.get_square(1,1), "O"))      
+        self.assertTrue(board.fork_at(board.get_square(1,1), "O"))
+
+class SeekWinTestCase(unittest.TestCase):
+    def runTest(self):
+        board = tictactoeAI.TTTBoard(3,3)
+        board.get_square(0,0).set("X")
+        board.get_square(1,0).set("X")
+        self.assertEqual(board.seek_win("X"), board.get_square(2,0))    
         
       
         
