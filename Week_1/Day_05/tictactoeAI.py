@@ -1,6 +1,6 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Fork-detection seems to be working.
+# CURRENT STATUS: Fork-detection seems broken.
 
 #(Testing a thing.)
 
@@ -223,7 +223,8 @@ class TTTBoard:
         opportunity_count = 0
         # print "row: " + str(row)
         # print "column: " + str(column)
-        for segment in self.segments(square):   
+        for segment in self.segments(square):  
+            # print segment        
             opportunity = 0
             for location in segment:
                 if location.value == self.get_opponent(symbol):
@@ -234,9 +235,11 @@ class TTTBoard:
                     continue
                 else:
                     raise Exception("Something went wrong!")
+            # print "opportunity: " + str(opportunity)
             if opportunity >= self.rows - 1:
-                opportunity_count += 1
+                opportunity_count += 1        
         if opportunity_count >= 2:
+            print "opportunity_count: " + str(opportunity_count)
             return True
         else:
             return False
@@ -260,7 +263,6 @@ class TTTBoard:
         Step 2 of the AI algorithm in Wikipedia
         """
         opponent = self.get_opponent(symbol)
-
         return self.seek_win(opponent)        
 
         
@@ -271,13 +273,18 @@ class TTTBoard:
         Step 3 of the AI algorithm in Wikipedia
         """
         for square in self.squares:
-            hypothetical_board = self.copy()
-            h_square = hypothetical_board.get_square(
-            square.row, square.column
-            )
-            h_square.set(symbol)
-            if hypothetical_board.fork_at(h_square, symbol):
-                return square                       
+            if square.value == "_":
+                print square
+                hypothetical_board = self.copy()
+                h_square = hypothetical_board.get_square(
+                square.row, square.column
+                )
+                h_square.set(symbol)
+                print hypothetical_board
+                if hypothetical_board.fork_at(h_square, symbol):
+                    return square        
+                else:
+                    print "no fork at: " + str(square)                
             
         
     def seek_blockfork_1(self, symbol):
@@ -287,7 +294,8 @@ class TTTBoard:
 
         player = symbol
         opponent = self.get_opponent(player)
-        if not self.seek_blockfork_2(player):
+        #Obviously this suggests that seek_blockfork_2 should be first: 
+        if not self.seek_blockfork_2(player):         
             for square in self:
                 for segment in self.segments(square):
                     selfcount = 0
