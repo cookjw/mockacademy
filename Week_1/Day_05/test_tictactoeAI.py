@@ -72,9 +72,13 @@ class SeekForkTestCase(unittest.TestCase):
         board = tictactoeAI.TTTBoard(3,3)
         board.get_square(0,1).set("X")
         board.get_square(1,0).set("X")
-        # print "test board: "
-        # print board
-        self.assertEqual(board.seek_fork("X"), board.get_square(0,0))           
+        self.assertEqual(board.seek_fork("X"), board.get_square(0,0))    
+
+class CenterTestCase(unittest.TestCase):
+    def runTest(self):
+        board = tictactoeAI.TTTBoard(3,3)
+        self.assertEqual(board.get_center(), board.get_square(1,1))
+
         
       
         
