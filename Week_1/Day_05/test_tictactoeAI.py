@@ -70,9 +70,11 @@ class SeekWinTestCase(unittest.TestCase):
 class SeekForkTestCase(unittest.TestCase):
     def runTest(self):
         board = tictactoeAI.TTTBoard(3,3)
-        board.get_square(0,0).set("X")
+        board.get_square(0,1).set("X")
         board.get_square(1,0).set("X")
-        self.assertEqual(board.seek_fork("X"), board.get_square(0,1))           
+        # print "test board: "
+        # print board
+        self.assertEqual(board.seek_fork("X"), board.get_square(0,0))           
         
       
         

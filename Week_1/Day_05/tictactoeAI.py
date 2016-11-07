@@ -1,8 +1,8 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Fork-detection seems broken.
+# CURRENT STATUS: Fork-detection seems non-broken
 
-#(Testing a thing.)
+
 
 
 
@@ -219,7 +219,7 @@ class TTTBoard:
         """
         checks whether a square participates in two simulatenous 
         win opportunities
-        """
+        """        
         opportunity_count = 0
         # print "row: " + str(row)
         # print "column: " + str(column)
@@ -239,7 +239,7 @@ class TTTBoard:
             if opportunity >= self.rows - 1:
                 opportunity_count += 1        
         if opportunity_count >= 2:
-            print "opportunity_count: " + str(opportunity_count)
+            # print "opportunity_count: " + str(opportunity_count)
             return True
         else:
             return False
@@ -274,17 +274,17 @@ class TTTBoard:
         """
         for square in self.squares:
             if square.value == "_":
-                print square
+                # print square
                 hypothetical_board = self.copy()
                 h_square = hypothetical_board.get_square(
                 square.row, square.column
                 )
                 h_square.set(symbol)
-                print hypothetical_board
+                # print hypothetical_board
                 if hypothetical_board.fork_at(h_square, symbol):
                     return square        
-                else:
-                    print "no fork at: " + str(square)                
+                # else:
+                    # print "no fork at: " + str(square)                
             
         
     def seek_blockfork_1(self, symbol):
