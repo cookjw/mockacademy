@@ -77,9 +77,7 @@ class SeekForkTestCase(unittest.TestCase):
 class CenterTestCase(unittest.TestCase):
     def runTest(self):
         board = tictactoeAI.TTTBoard(3,3)
-        self.assertEqual(board.get_center(), board.get_square(1,1))
-
-        
+        self.assertEqual(board.get_center(), board.get_square(1,1))        
       
         
 class DisplayTestCase(unittest.TestCase):

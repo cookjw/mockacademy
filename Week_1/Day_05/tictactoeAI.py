@@ -210,10 +210,6 @@ class TTTBoard:
         else:
             positive_diagonal = []
         return [row, column, positive_diagonal, negative_diagonal]
-
-            
-
-
         
     def fork_at(self, square, symbol):
         """
@@ -263,9 +259,7 @@ class TTTBoard:
         Step 2 of the AI algorithm in Wikipedia
         """
         opponent = self.get_opponent(symbol)
-        return self.seek_win(opponent)        
-
-        
+        return self.seek_win(opponent)             
 
         
     def seek_fork(self, symbol):
@@ -329,7 +323,22 @@ class TTTBoard:
             return self.get_square(self.rows/2, self.columns/2)
         else:
             pass
-        
+            
+    def opposite_corner(self, corner_square):
+        rows = self.rows - 1
+        columns = self.columns - 1
+        if (corner_square.row, corner_square.column) == (rows,0):        
+            return self.get_square(0, rows):
+        elif (corner_square.row, corner_square.column) == (0, columns):
+            return self.get_square(columns, 0)  
+        elif (corner_square.row, corner_square.column) == (0,0):
+            return (rows, columns):
+        elif (corner_square.row, corner_square.column) == (rows, columns):
+            return (0,0)
+        else:
+            raise Exception("Not a corner square!")
+                    
+    
     def seek_opposite_corner(self, symbol):
         """
         Step 6 of the AI algorithm in Wikipedia
