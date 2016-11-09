@@ -58,6 +58,10 @@ class TTTBoard:
         self.negative_diagonal = [
         self.get_square(index,index) for index in range(rows)
         ]
+        self.corner_squares = [
+        self.get_square(0,0), self.get_square(self.rows - 1, 0),
+        self.get_square(0, self.columns - 1), self.get_square(
+        self.rows - 1, self.columns - 1)]
                 
     def __str__(self):
         return self.display()
@@ -344,14 +348,18 @@ class TTTBoard:
         Step 6 of the AI algorithm in Wikipedia
         """
         opponent = self.get_opponent(symbol)
-        
-        pass
+        for corner_square in self.corner_squares:
+            if (corner_square.value == opponent and
+            self.opposite_corner(corner_square).value == "_"):
+                return self.opposite_corner(corner_square)       
         
     def seek_empty_corner(self):
         """
         Step 7 of the AI algorithm in Wikipedia
         """
-        pass
+        for corner_square in self.corner_squares:
+            if corner_square.value == "_":
+                return corner_square
         
     def seek_empty_side(self):
         """
