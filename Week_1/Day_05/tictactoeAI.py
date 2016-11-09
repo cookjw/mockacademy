@@ -1,6 +1,6 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: Fork-detection seems non-broken
+# CURRENT STATUS: corner functions working.
 
 
 
