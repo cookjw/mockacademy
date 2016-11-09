@@ -328,13 +328,13 @@ class TTTBoard:
         rows = self.rows - 1
         columns = self.columns - 1
         if (corner_square.row, corner_square.column) == (rows,0):        
-            return self.get_square(0, rows):
+            return self.get_square(0, rows)
         elif (corner_square.row, corner_square.column) == (0, columns):
             return self.get_square(columns, 0)  
         elif (corner_square.row, corner_square.column) == (0,0):
-            return (rows, columns):
+            return self.get_square(rows, columns)
         elif (corner_square.row, corner_square.column) == (rows, columns):
-            return (0,0)
+            return self.get_square(0,0)
         else:
             raise Exception("Not a corner square!")
                     
