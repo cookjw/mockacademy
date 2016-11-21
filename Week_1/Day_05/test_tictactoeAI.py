@@ -96,7 +96,17 @@ class CornerTestCase(unittest.TestCase):
         botleft.set("X")
         self.assertEqual(board.seek_empty_corner(), botright)
 
-       
+class SideTestCase(unittest.TestCase):
+    def runTest(self):
+        board = tictactoeAI.TTTBoard(3,3)
+        self.assertEqual(board.seek_empty_side(), board.get_square(0,1))
+        board.get_square(0,1).set("X")
+        self.assertEqual(board.seek_empty_side(), board.get_square(2,1))
+        board.get_square(2,1).set("O")
+        self.assertEqual(board.seek_empty_side(), board.get_square(1,0))
+        board.get_square(1,0).set("X")
+        self.assertEqual(board.seek_empty_side(), board.get_square(1,2))
+    
         
 class DisplayTestCase(unittest.TestCase):
     def runTest(self):

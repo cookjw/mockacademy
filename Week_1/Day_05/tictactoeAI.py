@@ -1,6 +1,6 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: corner functions working.
+# CURRENT STATUS: side function apparently working.
 
 
 
