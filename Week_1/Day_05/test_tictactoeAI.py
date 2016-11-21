@@ -95,7 +95,8 @@ class CornerTestCase(unittest.TestCase):
         topright.set("O")
         botleft.set("X")
         self.assertEqual(board.seek_empty_corner(), botright)
-            
+
+       
         
 class DisplayTestCase(unittest.TestCase):
     def runTest(self):

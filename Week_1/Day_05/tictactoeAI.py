@@ -5,13 +5,16 @@
 
 
 
-
+def check_empty_segment(segment):
+    for square in segment:
+        if square.value != "_":
+            return False
+    return True
 
 def get_empty_square(segment):
     for square in segment:
         if square.value == "_":
-            return square
-        
+            return square        
         
 
 
@@ -48,20 +51,43 @@ class TTTBoard:
         self.rows = rows
         self.columns = columns
         self.squares = []
+        
         for row in range(rows):
             for column in range(columns):
                 square = TTTSquare(row, column)
                 self.squares.append(square)
+                
         self.positive_diagonal = [
         self.get_square(index, rows - index -1) for index in range(rows)
         ]
         self.negative_diagonal = [
         self.get_square(index,index) for index in range(rows)
         ]
+        
         self.corner_squares = [
         self.get_square(0,0), self.get_square(self.rows - 1, 0),
         self.get_square(0, self.columns - 1), self.get_square(
         self.rows - 1, self.columns - 1)]
+        
+        self.top_side = [
+        self.get_square(0, col) for col in range(self.columns - 1)
+        ]
+        self.bottom_side = [
+        self.get_square(self.rows - 1, col) for col in range(
+        self.columns - 1
+        )
+        ]
+        self.left_side = [
+        self.get_square(row, 0) for row in range(self.rows - 1)
+        ]
+        self.right_side = [
+        self.get_square(
+        row, self.columns - 1) for row in range(self.rows - 1)
+        ]
+        
+        self.sides = [
+        self.top_side, self.bottom_side, self.left_side, self.right_side
+        ]
                 
     def __str__(self):
         return self.display()
@@ -365,7 +391,12 @@ class TTTBoard:
         """
         Step 8 of the AI algorithm in Wikipedia
         """
-        pass
+        def halfway_index(my_list):
+            return len(my_list)/2
+        for segment in self.sides:
+            if check_empty_segment(segment):
+                return segment[halfway_index(segment)]            
+        
         
     def get_opponent(self, symbol):
         player = symbol
