@@ -1,6 +1,6 @@
 # Tic-Tac-Toe for human vs. computer
 
-# CURRENT STATUS: side function apparently working.
+# CURRENT STATUS: play appears to work.
 
 
 
@@ -320,7 +320,7 @@ class TTTBoard:
         opponent = self.get_opponent(player)
         #Obviously this suggests that seek_blockfork_2 should be first: 
         if not self.seek_blockfork_2(player):         
-            for square in self:
+            for square in self.squares:
                 for segment in self.segments(square):
                     selfcount = 0
                     oppcount = 0
@@ -434,10 +434,10 @@ class TTTBoard:
         opposite_corner = self.seek_opposite_corner(player)
         if opposite_corner:
             return opposite_corner 
-        empty_corner = self.seek_empty_corner(player)
+        empty_corner = self.seek_empty_corner()
         if empty_corner:
             return empty_corner
-        empty_side = self.seek_empty_side(player)
+        empty_side = self.seek_empty_side()
         if empty_side:
             return empty_side
         pass 
