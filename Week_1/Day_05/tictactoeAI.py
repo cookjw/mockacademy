@@ -504,6 +504,7 @@ class TTTGame:
                 square = self.get_square_from_player(self.player)                
             square.set(self.player)                
             self.switch_turn()
+            print " "
             print self.board.display()
         if self.board.victory("X"):
             print "X wins!"
@@ -520,7 +521,26 @@ class TTTGame:
         
  
 if __name__ == "__main__":
-    game = TTTGame(3,3)
+
+    print "Welcome to Tic-Tac-Toe!"
+    
+    computer_players = []   
+    
+    gen_string = """
+    Choose type of player for {}.
+    (Type C for computer, H for human; then press ENTER.)
+    """
+    x_string = gen_string.format("X")
+    o_string = gen_string.format("O")
+    x_c_or_h = raw_input(x_string).upper()
+    o_c_or_h = raw_input(o_string).upper()
+    if x_c_or_h =="C":
+        computer_players.append("X")
+    if o_c_or_h == "C":
+        computer_players.append("O")        
+    computer_players = tuple(computer_players)    
+    
+    game = TTTGame(3,3, computer_players = computer_players)
     game.play()
           
             
